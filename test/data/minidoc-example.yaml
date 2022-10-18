@@ -1,0 +1,22 @@
+format: 'piisa:src-document:v1'
+header:  
+  document:
+    id: 00000-11111
+    type: tree
+chunks:
+- id: 1
+  data: |-
+    An example source document
+- id: 2
+  data: |-
+    Section 1
+  chunks:
+  - id: 3
+    data: |-
+      My name is Ford Prefect, my phone number is +34983453999, and my SSN
+      is aBC
+  - id: 4
+    data: |-
+      My credit card number is 4273 9666 4581 5642 and I have used it to buy
+      BTCs stored at 1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i. This one, however, is
+      not a credit card number: 9999 9666 4581 5643

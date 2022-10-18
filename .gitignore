@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Backup & old files
+*~
+old/
+*.old
+
+# Make sure the "build" modules are included
+!src/pii_extract/build/
+!test/unit/build/
