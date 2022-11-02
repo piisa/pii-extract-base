@@ -72,8 +72,8 @@ class FolderTaskCollector(BaseTaskCollector):
         Import and load all the tasks defined in a Python module
         """
         pkg = f"{self._pkg}.{name}"
-        self._dbgout("... PII TASKS for", pkg)
-        self._dbgout("... path =", path)
+        self._dbgout("... PII TASKS for {}", pkg)
+        self._dbgout("... path = {}", path)
 
         # Get the list of Python files in the module
         modlist = (m.stem for m in Path(path).iterdir()
@@ -103,7 +103,7 @@ class FolderTaskCollector(BaseTaskCollector):
                 num += 1
 
         if num == 0:
-            self._dbgout("... NO PII TASKS for", pkg)
+            self._dbgout("... NO PII TASKS for {}", pkg)
 
 
     def language_list(self) -> List[str]:
@@ -131,7 +131,7 @@ class FolderTaskCollector(BaseTaskCollector):
         """
         Import all task processors available for a given lang & country
         """
-        self._dbgout(".. IMPORT FROM:", lang, "/", country)
+        self._dbgout(".. IMPORT FROM: {}/{}", lang, country or "<all>")
         if lang == LANG_ANY:
             name = LANG_ANY
             path = self.basedir / LANG_ANY

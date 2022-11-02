@@ -31,9 +31,10 @@ class BaseTaskCollector:
         self._country = None
 
 
-    def _dbgout(self, msg: str, *args):
+    def _dbgout(self, msg: str, *args, **kwargs):
         if self._debug:
-            print(msg, *args, file=sys.stderr)
+            file=kwargs.pop("file", sys.stderr)
+            print(msg.format(*args), file=file, **kwargs)
 
 
     def language_list(self) -> List[str]:
@@ -96,7 +97,7 @@ class BaseTaskCollector:
         elif isinstance(lang, str):
             lang = [lang]
         if self._debug:
-            self._dbgout(". GATHER LANGUAGES:", " ".join(sorted(lang)))
+            self._dbgout(". GATHER LANGUAGES: {}", " ".join(sorted(lang)))
 
         for ln in lang:
             yield from self.gather_tasks(ln, None)

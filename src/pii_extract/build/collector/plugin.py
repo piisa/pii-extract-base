@@ -5,7 +5,9 @@ pii-extract plugins
 A plugin must have 
   * an entry point of group PII_EXTRACT_PLUGIN_ID
   * the entry point must be a class with:
-     - a `get_tasks()` method delivering an iterable of task definitions
+     - a constructor with an optional "debug" keyword argument
+     - a `get_tasks()` method delivering an iterable of task definitions, with
+       an optional "lang" argument to restrict to a specific language
      - optional attributes `source`, `version` and `description`
 """
 
@@ -16,18 +18,14 @@ from typing import Dict, List, Iterable
 from pii_data.helper.exception import ProcException
 
 from .base import BaseTaskCollector
-
-
-# Group name for the entry point in the plugin package
-PII_EXTRACT_PLUGIN_ID = 'pii_extract.plugin'
-
+from .defs import PII_EXTRACT_PLUGIN_ID
 
 # --------------------------------------------------------------------------
 
 
 class PluginTaskCollector(BaseTaskCollector):
 
-    def __init__(self, lang: str = None, debug: bool = False):
+    def __init__(self, debug: bool = False):
         """
         Check available plugins and create an instance
         """
@@ -38,8 +36,9 @@ class PluginTaskCollector(BaseTaskCollector):
         for entry in entry_points().get(PII_EXTRACT_PLUGIN_ID, []):
 
             LoaderClass = entry.load()
+            self._dbgout(". LOAD PLUGIN: {}", entry.name)        
             try:
-                plugin = LoaderClass(lang)
+                plugin = LoaderClass(debug=debug)
             except Exception as e:
                 raise ProcException("cannot instantiate plugin '{}': {}",
                                     entry.name, e)

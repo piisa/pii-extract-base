@@ -40,7 +40,8 @@ def test100_process_file():
 
     with tempfile.NamedTemporaryFile(suffix=".json") as f1:
         f1.close()
-        got = mod.process_file(localdoc, f1.name, lang="en", taskfile=taskfile)
+        got = mod.process_file(localdoc, f1.name, lang="en", taskfile=taskfile,
+                               load_plugins=False)
 
     exp = {'calls': 1, 'PHONE_NUMBER': 1, 'entities': 2, 'CREDIT_CARD': 1}
     assert exp == got
@@ -56,7 +57,8 @@ def test110_process_file_result(patch_datetime):
 
     with tempfile.NamedTemporaryFile(suffix=".json") as f1:
         f1.close()
-        r = mod.process_file(localdoc, f1.name, lang="en", taskfile=taskfile)
+        r = mod.process_file(localdoc, f1.name, lang="en", taskfile=taskfile,
+                             load_plugins=False)
 
         with open(f1.name, encoding="utf-8") as f2:
             got = json.load(f2)

@@ -60,6 +60,7 @@ class JsonTaskCollector(BaseTaskCollector):
         if isinstance(filename, (str, Path)):
             filename = [filename]
         for f in filename:
+            self._dbgout(".. READ TASKFILE: {}", f)
             self.tasks += list(self._read_taskfile(f))
 
 

@@ -7,7 +7,7 @@ import sys
 from typing import Dict, List, TextIO
 
 from pii_data.types.localdoc import LocalSrcDocumentFile
-from pii_data.helper.io import openfile
+from pii_data.helper.io import openfile, base_extension
 from pii_data.helper.exception import InvArgException
 
 from ..helper.types import TYPE_STR_LIST
@@ -25,15 +25,29 @@ def print_tasks(lang: str, proc: PiiProcessor, out: TextIO):
             print(f"     {name}: {doc}", file=out)
 
 
+def piic_format(filename: str) -> str:
+    """
+    Find out the desired file format for a PII Collection
+    """
+    ext = base_extension(filename)
+    if ext == ".json":
+        return "json"
+    elif ext in (".ndjson", ".jsonl"):
+        return "ndjson"
+    else:
+        raise InvArgException("cannot recognize piic output format for: {}",
+                              filename)
+
 # ----------------------------------------------------------------------
 
 
 def process_file(infile: str,
                  outfile: str,
+                 load_plugins: bool = True,
+                 taskfile: TYPE_STR_LIST = None,
                  lang: str = None,
                  country: List[str] = None,
                  tasks: List[str] = None,
-                 taskfile: TYPE_STR_LIST = None,
                  chunk_context: bool = False,
                  outfmt: str = None,
                  debug: bool = False,
@@ -43,13 +57,14 @@ def process_file(infile: str,
     Process a number of PII tasks on a file holding a source document
       :param infile: input source document
       :param outfile: output file where to store the detected PII entities
+      :param load_plugins: load pii-extract task plugins
+      :param taskfile: JSON task definition files to add to the set (in addition
+         to the tasks collected via plugins)
       :param lang: language the document is in (if not defined inside the doc)
       :param country: countries to build tasks for (if None, all applicable
          countries for the language are used)
       :param tasks: specific set of PII tasks to build (default is all
          applicable tasks)
-      :param taskfile: JSON task definition files to add to the set (in addition
-         to the tasks collected via plugins)
       :param chunk_context: when iterating the document, generate contexts
          for each chunk
       :param outfmt: format for the output list of tasks: "json" or "ndjson"
@@ -64,7 +79,7 @@ def process_file(infile: str,
         raise InvArgException("no language defined in options or document")
 
     # Create the object
-    proc = PiiProcessor(debug=debug)
+    proc = PiiProcessor(load_plugins=load_plugins, debug=debug)
     if taskfile:
         proc.add_json_tasks(taskfile)
 
@@ -74,12 +89,7 @@ def process_file(infile: str,
         print_tasks(lang, proc, sys.stderr)
 
     if outfmt is None:
-        if outfile.endswith('.json'):
-            outfmt = 'json'
-        elif outfile.endswith('.ndjson'):
-            outfmt = 'ndjson'
-        else:
-            raise InvArgException("no output format specified")
+        outfmt = piic_format(outfile)
 
     if debug:
         print(". Reading from:", infile, file=sys.stderr)

@@ -40,7 +40,7 @@ def test100_constructor():
     """
     Test base constructor
     """
-    pd = mod.PiiProcessor()
+    pd = mod.PiiProcessor(load_plugins=False)
     assert str(pd) == '<PiiProcessor #0>'
 
 
@@ -59,10 +59,10 @@ def test110_constructor_json():
     Test constructor, with JSON
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     assert str(pd) == '<PiiProcessor #2>'
 
-    pd = mod.PiiProcessor()
+    pd = mod.PiiProcessor(load_plugins=False)
     pd.add_json_tasks(taskfile)
     assert str(pd) == '<PiiProcessor #2>'
 
@@ -93,7 +93,7 @@ def test150_task_info():
     Test building a PiiTask
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     with pytest.raises(ProcException):
         pd.task_info()
 
@@ -103,7 +103,7 @@ def test200_build_tasks():
     Test building a PiiTask
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     n = pd.build_tasks("en")
     assert n == 2
     n = pd.build_tasks("any")
@@ -114,10 +114,10 @@ def test200_build_tasks():
 
 def test210_tasks_info():
     """
-    Test building a PiiTask
+    Test fetching task info
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     pd.build_tasks("en")
     got = pd.task_info()
     exp = {
@@ -138,7 +138,7 @@ def test220_tasks_detect(patch_datetime):
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -153,7 +153,7 @@ def test230_tasks_detect_header(patch_datetime):
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -187,7 +187,7 @@ def test230_tasks_detect_pii(patch_datetime):
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -206,7 +206,7 @@ def test230_tasks_detect_pii_dict(patch_datetime):
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -247,7 +247,7 @@ def test250_tasks_stats(patch_datetime):
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)

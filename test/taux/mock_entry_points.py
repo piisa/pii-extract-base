@@ -4,7 +4,7 @@ A class & function to mock the plugin mechanics
 
 from unittest.mock import Mock
 
-from pii_extract.load.defs import PII_EXTRACT_PLUGIN_ID
+from pii_extract.build.collector.defs import PII_EXTRACT_PLUGIN_ID
 
 from taux.task_examples import TASK_PHONE_NUMBER, TASK_GOVID, TASK_CREDIT_CARD
 
@@ -17,7 +17,7 @@ class PluginMock:
     version = "0.999"
     description = "A plugin mock description"
 
-    def __init__(self, lang):
+    def __init__(self, debug=None):
         pass
 
     def get_tasks(self):

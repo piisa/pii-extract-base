@@ -69,13 +69,13 @@ class PiiProcessor:
             valid for "any"
         """
         # Sanitize input
-        self._lang = lang.lower()
+        self._lang = lang.lower() if lang else None
         if isinstance(country, str):
             country = [country]
         self._country = [c.lower() for c in country] if country else None
         # Build the list of tasks
-        self._tasks = list(self._ptc.build_tasks(lang, country, tasks=tasks,
-                                                 add_any=add_any))
+        self._tasks = list(self._ptc.build_tasks(self._lang, country,
+                                                 tasks=tasks, add_any=add_any))
         return len(self._tasks)
 
 

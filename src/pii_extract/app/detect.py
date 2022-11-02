@@ -36,6 +36,9 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     g3 = parser.add_argument_group("Other")
     g3.add_argument("--show-stats", action="store_true", help="show statistics")
     g3.add_argument("--show-tasks", action="store_true", help="show defined tasks")
+    g3.add_argument("--debug", action="store_true", help="debug mode")
+    g3.add_argument('--reraise', action='store_true',
+                    help='re-raise exceptions on errors')
 
     return parser.parse_args(args)
 
@@ -43,10 +46,17 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 def main(args: List[str] = None):
     if args is None:
         args = sys.argv[1:]
-    args = parse_args(args)
-    args = vars(args)
-    process_file(args.pop("infile"), args.pop("outfile"), args.pop("lang"),
-                 **args)
+    nargs = parse_args(args)
+    args = vars(nargs)
+    reraise = args.pop("reraise")
+    try:
+        process_file(args.pop("infile"), args.pop("outfile"), **args)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        if reraise:
+            raise
+        else:
+            sys.exit(1)
 
 
 if __name__ == "__main__":
