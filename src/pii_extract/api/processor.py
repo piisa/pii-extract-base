@@ -22,18 +22,19 @@ from ..build.collector import JsonTaskCollector
 
 class PiiProcessor:
 
-    def __init__(self, load_plugins: bool = True,
-                 json_tasks: str = None, debug: bool = False):
+    def __init__(self, load_plugins: bool = True, config: Dict = None,
+                 debug: bool = False):
         """
         Initialize a PII Processor object
           :param load_plugins: gather tasks in all available pii-extract plugins
-          :param json_tasks: gather tasks as defined in a JSON file
+          :param config: configuration file, possibly containing an
+            "extract_tasks" section and/or an "extract_plugins" section
         """
         self._debug = debug
         self._tasks = None
         self._stats = defaultdict(int)
         self._ptc = get_task_collection(load_plugins=load_plugins,
-                                        json_taskfiles=json_tasks, debug=debug)
+                                        config=config, debug=debug)
 
 
     def __repr__(self) -> str:
@@ -45,7 +46,7 @@ class PiiProcessor:
         Add all tasks defined in one JSON file
         """
         c = JsonTaskCollector(debug=self._debug)
-        c.add_taskfile(jsonfile)
+        c.add_tasks(jsonfile)
         self._ptc.add_collector(c)
 
 
@@ -74,8 +75,9 @@ class PiiProcessor:
             country = [country]
         self._country = [c.lower() for c in country] if country else None
         # Build the list of tasks
-        self._tasks = list(self._ptc.build_tasks(self._lang, country,
-                                                 tasks=tasks, add_any=add_any))
+        tasks = self._ptc.build_tasks(self._lang, self._country,
+                                      tasks=tasks, add_any=add_any)
+        self._tasks = list(tasks)
         return len(self._tasks)
 
 
@@ -113,6 +115,7 @@ class PiiProcessor:
             for task in self._tasks:
                 det = PiiDetector(task.name, task.version, task.source)
                 for pii in task(chunk):
+                    pii.fields["status"] = "detected"
                     piic.add(pii, det)
                     self._stats[pii.type.name] += 1
                     self._stats['entities'] += 1

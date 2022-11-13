@@ -93,7 +93,6 @@ def test220_task_search():
     got = list(tc.taskdef_list(PiiEnum.PERSON, "en"))
     assert len(got) == 0
 
-
     for country in ("au", "us", COUNTRY_ANY, None):
         got = list(tc.taskdef_list(PiiEnum.PHONE_NUMBER, "en", country))
         assert len(got) == 1
@@ -103,7 +102,7 @@ def test220_task_search():
     assert len(got) == 0
     got = list(tc.taskdef_list(PiiEnum.PHONE_NUMBER, "pt"))
     assert len(got) == 0
-    
+
 
 def test230_task_all():
     """

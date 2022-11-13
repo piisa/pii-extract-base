@@ -2,22 +2,14 @@
 Build lists of PiiTask specifications by reading a JSON definition
 """
 
-import json
-from pathlib import Path
+from typing import Dict, Iterable, Union
 
-from typing import Dict, List, Iterable, Dict
+from pii_data.helper.exception import InvArgException, ConfigException
+from pii_data.helper.config import load_config, TYPE_CONFIG
 
-from pii_data.helper.io import openfile
-from pii_data.helper.exception import InvArgException
-
-from ...helper.types import TYPE_STR_LIST
+from ...defs import FMT_CONFIG_TASKS
 from ..parser import build_tasklist
 from .base import BaseTaskCollector
-
-
-# For JSON defs: format specification string that indicates a task definition
-FMT_TASK_SPEC = "piisa:piitask-spec:v1"
-
 
 
 # --------------------------------------------------------------------------
@@ -30,38 +22,35 @@ class JsonTaskCollector(BaseTaskCollector):
         self.tasks = []
 
 
-    def _read_taskfile(self, filename: str) -> Iterable[Dict]:
+    def _parse_tasks(self, task_spec: Dict) -> Iterable[Dict]:
         """
-        Read a list of task descriptors from a JSON file
+        Parse a list of task descriptors
         """
-        with openfile(filename, encoding="utf-8") as f:
-            try:
-                task_spec = json.load(f)
-            except json.JSONDecodeError as e:
-                raise InvArgException("invalid task spec file '{}': {}",
-                                      filename, e) from e
-
-            if task_spec.get("format") != FMT_TASK_SPEC:
-                raise InvArgException("invalid format field in task spec '{}'",
-                                      filename)
-            header = task_spec.get("header", {})
-            rawlist = task_spec.get("tasklist", [])
-            try:
-                yield from build_tasklist(rawlist, header)
-            except Exception as e:
-                raise InvArgException(
-                    "error in task spec file '{}': {}", filename, e) from e
+        fmt = task_spec.get("format")
+        if fmt != FMT_CONFIG_TASKS:
+            raise ConfigException("invalid format field '{}' in task spec", fmt)
+        header = task_spec.get("header", {})
+        rawlist = task_spec.get("tasklist", [])
+        try:
+            yield from build_tasklist(rawlist, header)
+        except Exception as e:
+            raise InvArgException("error in task spec: {}", e) from e
 
 
-    def add_taskfile(self, filename: TYPE_STR_LIST):
+    def add_tasks(self, tasks: Union[Dict, TYPE_CONFIG]):
         """
-        Add to the object all tasks defined in a JSON file (or in several)
+        Add to the object a list of tasks
+          :param tasks: task definitions to add. It can be:
+            - a dictionary of task definitions
+            - a filename for a JSON with task definitions
+            - a list of filenames
         """
-        if isinstance(filename, (str, Path)):
-            filename = [filename]
-        for f in filename:
-            self._dbgout(".. READ TASKFILE: {}", f)
-            self.tasks += list(self._read_taskfile(f))
+        if not isinstance(tasks, Dict):
+            self._dbgout(".. READ TASKFILE: {}", tasks)
+            cfg = load_config(tasks, formats=FMT_CONFIG_TASKS)
+            tasks = cfg.get("extract_tasks")
+
+        self.tasks += list(self._parse_tasks(tasks))
 
 
     def _gather_tasks(self) -> Iterable[Dict]:

@@ -7,10 +7,12 @@ import sys
 from typing import Dict, List, TextIO
 
 from pii_data.types.localdoc import LocalSrcDocumentFile
+from pii_data.helper.config import load_config
 from pii_data.helper.io import openfile, base_extension
 from pii_data.helper.exception import InvArgException
 
 from ..helper.types import TYPE_STR_LIST
+from ..defs import FMT_CONFIG_PLUGIN, FMT_CONFIG_TASKS
 from . import PiiProcessor
 
 
@@ -44,7 +46,7 @@ def piic_format(filename: str) -> str:
 def process_file(infile: str,
                  outfile: str,
                  load_plugins: bool = True,
-                 taskfile: TYPE_STR_LIST = None,
+                 configfile: TYPE_STR_LIST = None,
                  lang: str = None,
                  country: List[str] = None,
                  tasks: List[str] = None,
@@ -58,8 +60,8 @@ def process_file(infile: str,
       :param infile: input source document
       :param outfile: output file where to store the detected PII entities
       :param load_plugins: load pii-extract task plugins
-      :param taskfile: JSON task definition files to add to the set (in addition
-         to the tasks collected via plugins)
+      :param config: JSON configuration file(s) to add (defining plugin and/or
+         tasks)
       :param lang: language the document is in (if not defined inside the doc)
       :param country: countries to build tasks for (if None, all applicable
          countries for the language are used)
@@ -78,10 +80,15 @@ def process_file(infile: str,
     if not lang:
         raise InvArgException("no language defined in options or document")
 
+    # Load config, if given
+    if configfile:
+        fmts = FMT_CONFIG_PLUGIN, FMT_CONFIG_TASKS
+        config = load_config(configfile, formats=fmts)
+    else:
+        config = None
+
     # Create the object
-    proc = PiiProcessor(load_plugins=load_plugins, debug=debug)
-    if taskfile:
-        proc.add_json_tasks(taskfile)
+    proc = PiiProcessor(load_plugins=load_plugins, config=config, debug=debug)
 
     # Build the task objects
     proc.build_tasks(lang, country, tasks=tasks)

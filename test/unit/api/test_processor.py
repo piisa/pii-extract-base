@@ -9,6 +9,7 @@ import pytest
 from pii_data.types import PiiEnum, PiiCollection
 from pii_data.types.localdoc import LocalSrcDocumentFile
 from pii_data.helper.exception import ProcException
+from pii_data.helper.config import load_config
 
 import pii_extract.build.collector.plugin as pgmod
 import pii_extract.api.processor as mod
@@ -59,7 +60,8 @@ def test110_constructor_json():
     Test constructor, with JSON
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     assert str(pd) == '<PiiProcessor #2>'
 
     pd = mod.PiiProcessor(load_plugins=False)
@@ -72,10 +74,22 @@ def test120_constructor_plugin_json(patch_entry_point):
     Test constructor, with plugins & JSON
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(config=config)
     assert str(pd) == '<PiiProcessor #5>'
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     assert str(pd) == '<PiiProcessor #2>'
+
+    # Specify an empty plugin conf
+    config["extract_plugins"] = {}
+    pd = mod.PiiProcessor(config=config)
+    assert str(pd) == '<PiiProcessor #2>'
+
+    # Specify plugins to load
+    config["extract_plugins"] = {"piisa-detectors-mock": None}
+    pd = mod.PiiProcessor(config=config)
+    assert str(pd) == '<PiiProcessor #5>'
 
 
 def test130_language_list(patch_entry_point):
@@ -83,27 +97,30 @@ def test130_language_list(patch_entry_point):
     Test language list
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(config=config)
     assert str(pd) == '<PiiProcessor #5>'
     assert list(pd.language_list()) == ["any", "en"]
 
 
 def test150_task_info():
     """
-    Test building a PiiTask
+    Test task_info with no tasks built
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
-    with pytest.raises(ProcException):
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
+    with pytest.raises(ProcException) as excinfo:
         pd.task_info()
-
+    assert "no detector tasks have been built" == str(excinfo.value)
 
 def test200_build_tasks():
     """
-    Test building a PiiTask
+    Test building tasks
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     n = pd.build_tasks("en")
     assert n == 2
     n = pd.build_tasks("any")
@@ -117,7 +134,8 @@ def test210_tasks_info():
     Test fetching task info
     """
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     pd.build_tasks("en")
     got = pd.task_info()
     exp = {
@@ -133,12 +151,13 @@ def test210_tasks_info():
 
 def test220_tasks_detect(patch_datetime):
     """
-    Test building a PiiTask
+    Test running a detection
     """
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -148,12 +167,13 @@ def test220_tasks_detect(patch_datetime):
 
 def test230_tasks_detect_header(patch_datetime):
     """
-    Test building a PiiTask
+    Test detection header
     """
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -180,14 +200,15 @@ def test230_tasks_detect_header(patch_datetime):
     assert exp == r.header()
 
 
-def test230_tasks_detect_pii(patch_datetime):
+def test240_tasks_detect_pii(patch_datetime):
     """
-    Test building a PiiTask
+    Test PII detection
     """
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -199,14 +220,15 @@ def test230_tasks_detect_pii(patch_datetime):
     assert str(pii[1]) == "<PiiEntity CREDIT_CARD:4273 9666 4581 5642>"
 
 
-def test230_tasks_detect_pii_dict(patch_datetime):
+def test250_tasks_detect_pii_dict(patch_datetime):
     """
-    Test building a PiiTask
+    Test PII detection
     """
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)
@@ -216,6 +238,7 @@ def test230_tasks_detect_pii_dict(patch_datetime):
     exp = {
         'detector': 1,
         'type': 'PHONE_NUMBER',
+        'status': 'detected',
         'value': '+34983453999',
         'chunkid': '3',
         'country': 'any',
@@ -229,6 +252,7 @@ def test230_tasks_detect_pii_dict(patch_datetime):
     exp = {
         'detector': 2,
         'type': 'CREDIT_CARD',
+        'status': 'detected',
         'value': '4273 9666 4581 5642',
         'chunkid': '4',
         'subtype': 'standard credit card',
@@ -247,7 +271,8 @@ def test250_tasks_stats(patch_datetime):
     localdoc = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
     taskfile = Path(__file__).parents[2] / "data" / "task-spec.json"
 
-    pd = mod.PiiProcessor(load_plugins=False, json_tasks=taskfile)
+    config = load_config(taskfile)
+    pd = mod.PiiProcessor(load_plugins=False, config=config)
     pd.build_tasks("en")
 
     doc = LocalSrcDocumentFile(localdoc)

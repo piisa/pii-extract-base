@@ -1,5 +1,5 @@
 {
-  "format": "piisa:piitask-spec:v1",
+  "format": "piisa:config:extract:tasks:v1",
   "header": {
     "lang": "en",
     "source": "piisa:pii-extract-base:test",

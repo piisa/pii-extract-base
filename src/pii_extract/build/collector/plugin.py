@@ -25,7 +25,7 @@ from .defs import PII_EXTRACT_PLUGIN_ID
 
 class PluginTaskCollector(BaseTaskCollector):
 
-    def __init__(self, debug: bool = False):
+    def __init__(self, plugin_cfg: Dict = None, debug: bool = False):
         """
         Check available plugins and create an instance
         """
@@ -35,10 +35,17 @@ class PluginTaskCollector(BaseTaskCollector):
 
         for entry in entry_points().get(PII_EXTRACT_PLUGIN_ID, []):
 
+            if plugin_cfg is None:
+                options = {}
+            else:
+                if entry.name not in plugin_cfg:
+                    continue
+                options = plugin_cfg[entry.name] or {}
+
             LoaderClass = entry.load()
-            self._dbgout(". LOAD PLUGIN: {}", entry.name)        
+            self._dbgout(". LOAD PLUGIN: {}", entry.name)
             try:
-                plugin = LoaderClass(debug=debug)
+                plugin = LoaderClass(**options, debug=debug)
             except Exception as e:
                 raise ProcException("cannot instantiate plugin '{}': {}",
                                     entry.name, e)

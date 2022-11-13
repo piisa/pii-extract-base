@@ -30,7 +30,7 @@ def mock_entry_points(monkeypatch, module):
     Monkey-patch the entry_points call to return a fake plugin class
     """
     mock_entry = Mock()
-    mock_entry.name = "mock plugin name"
+    mock_entry.name = "piisa-detectors-mock"
     mock_entry.load = Mock(return_value=PluginMock)
 
     mock_ep = Mock(return_value={PII_EXTRACT_PLUGIN_ID: [mock_entry]})

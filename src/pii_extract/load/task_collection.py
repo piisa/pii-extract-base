@@ -42,7 +42,7 @@ def build_task(task: Dict) -> BasePiiTask:
     """
     Build a task object from its task definition
     """
-    # Prepare arguments
+    # Prepare standard arguments
     try:
         ttype, tobj = task["type"], task["task"]
         args = {k: task[k] for k in ("pii", "lang", "country", "name")}
@@ -50,11 +50,14 @@ def build_task(task: Dict) -> BasePiiTask:
         raise InvArgException("invalid pii task object: missing field {}", e)
     for k in ("doc", "version", "source", "context"):
         args[k] = task.get(k)
+
+    # Extra custom arguments
+    # (class & regex: for the constructor, callable: for the callable itself)
     kwargs = task.get("kwargs", {})
 
     # Instantiate
     if ttype == "PiiTask":
-        proc = tobj(**args)
+        proc = tobj(**args, **kwargs)
     elif ttype == "callable":
         proc = CallablePiiTask(tobj, extra_kwargs=kwargs, **args)
     elif ttype in ("re", "regex"):
@@ -186,34 +189,37 @@ class PiiTaskCollection:
 
         # Build and return them, ensuring there are no duplicates
         built = set()
-        for t in tasklist:
-            if t["task"] in built:
+        for td in tasklist:
+            if not td.get("multi_type") and td["task"] in built:
                 continue
-            yield build_task(t)
-            built.add(t["task"])
+            task = build_task(td)
+            if task:
+                yield task
+                built.add(td["task"])
 
 
 
 # --------------------------------------------------------------------------
 
 def get_task_collection(load_plugins: bool = True,
-                        json_taskfiles: List[str] = None,
+                        config: Dict = None,
                         debug: bool = False) -> PiiTaskCollection:
     """
     Create a task collection; collect all applicable tasks
     """
     piic = PiiTaskCollection()
+    if not config:
+        config = {}
 
     if load_plugins:
-        c = PluginTaskCollector(debug=debug)
+        c = PluginTaskCollector(plugin_cfg=config.get("extract_plugins"),
+                                debug=debug)
         piic.add_collector(c)
 
-    if json_taskfiles:
+    task_cfg = config.get("extract_tasks")
+    if task_cfg:
         c = JsonTaskCollector(debug=debug)
-        if not isinstance(json_taskfiles, (list, tuple)):
-            json_taskfiles = [json_taskfiles]
-        for fname in json_taskfiles:
-            c.add_taskfile(fname)
+        c.add_tasks(task_cfg)
         piic.add_collector(c)
 
     return piic

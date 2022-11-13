@@ -36,7 +36,7 @@ def test110_list(patch_entry_point):
     assert isinstance(pl, list)
     assert len(pl) == 1
     assert isinstance(pl[0], dict)
-    assert pl[0]['name'] == 'mock plugin name'
+    assert pl[0]['name'] == 'piisa-detectors-mock'
     assert pl[0]['version'] == '0.999'
     assert isinstance(pl[0]['object'], PluginMock)
 

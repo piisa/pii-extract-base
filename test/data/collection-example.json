@@ -21,6 +21,7 @@
     {
       "detector": 1,
       "type": "PHONE_NUMBER",
+      "status": "detected",
       "value": "+34983453999",
       "chunkid": "3",
       "country": "any",
@@ -32,6 +33,7 @@
     {
       "detector": 2,
       "type": "CREDIT_CARD",
+      "status": "detected",
       "value": "4273 9666 4581 5642",
       "chunkid": "4",
       "subtype": "standard credit card",

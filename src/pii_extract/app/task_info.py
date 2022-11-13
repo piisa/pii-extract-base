@@ -8,17 +8,24 @@ import argparse
 
 from typing import List, TextIO
 
+from pii_data.helper.config import load_config
+
 from .. import VERSION
 from ..build.collector import PluginTaskCollector
 from ..api import PiiProcessor
 from ..api.file import print_tasks
 
 
-def print_plugins(out: TextIO, debug: bool = False):
+def print_plugins(args: argparse.Namespace, out: TextIO, debug: bool = False):
     """
     List the plugins
     """
-    ptc = PluginTaskCollector(debug=debug)
+    if args.config:
+        data = load_config(args.config)
+        config = data.get("extract_plugins") or {}
+    else:
+        config = {}
+    ptc = PluginTaskCollector(plugin_cfg=config, debug=debug)
     print(". Installed plugins", file=out)
     for plugin in ptc.list_plugins():
         print(f"\n Name: {plugin['name']}", file=out)
@@ -59,8 +66,8 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
     opt_com1 = argparse.ArgumentParser(add_help=False)
     c3 = opt_com1.add_argument_group('Source loading options')
-    c3.add_argument("--taskfile", nargs="+",
-                    help="add all pii tasks defined in a JSON file")
+    c3.add_argument("--config", nargs="+",
+                    help="add pii tasks and/or plugins defined in JSON files")
     c3.add_argument("--skip-plugins", action="store_false",
                     help="do not load pii-extract plugins")
 
@@ -105,7 +112,7 @@ def main(args: List[str] = None):
 
     try:
         if args.cmd == "list-plugins":
-            print_plugins(sys.stdout)
+            print_plugins(args, sys.stdout)
         elif args.cmd == "list-languages":
             print_languages(args, sys.stdout)
         else:

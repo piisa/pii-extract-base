@@ -33,7 +33,7 @@ class BaseTaskCollector:
 
     def _dbgout(self, msg: str, *args, **kwargs):
         if self._debug:
-            file=kwargs.pop("file", sys.stderr)
+            file = kwargs.pop("file", sys.stderr)
             print(msg.format(*args), file=file, **kwargs)
 
 
