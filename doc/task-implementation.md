@@ -5,31 +5,15 @@ given language and country). The `pii-extract-base` package accepts three
 types of implementations for a PII task. They are commented in the following
 sections.
 
+Once defined, a task is made available to the framework via a [task
+descriptor], which defines all the fields needed to use the task.
+
 
 ## Regex implementation
 
 In its simplest form, a PII Task can be just a regular expression pattern.
 This pattern should match string fragments that correspond to the PII entity 
-to be detected.
-
-Rules for the implementation of such regex are:
-
-* Implement it as a regular expression _string_, **not** as a compiled regular
-  expression (it will be compiled when loaded by the module)
-* The pattern **will be compiled with the [regex] package**, instead of the
-  `re` package in the standard Python library, so you can use the extended
-  features (such as unicode categories) in `regex`. Compilation will be done
-  in backwards-compatible mode (i.e. using the `VERSION0` flag), so it should
-  be fully compatible with `re`
-* Do **not** anchor the regex to either beginning or end (it should be able to
-  match anywhere in the passed string, which itself can be any portion of
-  a document)
-* The regex must have either no capturing groups (the whole match will be
-  considered as the PII value) or a single one (which will be the PII value)
-* The pattern will be compiled with the [re.VERBOSE] (aka `re.X`) flag, so
-  take that into account (in particular, **whitespace is ignored**, so if it is
-  part of the regular expression needs to included as a category i.e. `\s`, or
-  escaped)
+to be detected. See the [guidelines for creating PII regexes].
 
 An example can be seen in the [international phone number] detector.
 
@@ -44,9 +28,10 @@ is:
    def my_pii_detector(src: str) -> Iterable[str]:
 ```
 
-The function can have any name, but the name should indicate the entity it is
-capturing, since it will be used as the `name` attribute for the task (after
-converting underscores into spaces).
+The function can have any name, but it may be good to have an illustrative name,
+since if the task descriptor does not contain a task name, the function name
+will be used as the `name` attribute for the task (after converting underscores
+into spaces).
 
 The function should:
 
@@ -72,7 +57,8 @@ then it is better to use the class implementation type below.
 
 In this case the task is implemented as a full Python class. The class *must*:
 
- * inherit from `pii_finder.helper.BasePiiTask`
+ * inherit from `pii_extract.build.task.BasePiiTask` (or if it can detect
+   more than one PII type, `pii_extract.build.task.MultiPiiTask`)
  * implement a `find` method with the following signature:
 
         def find(self, text: str) -> Iterable[PiiEntity]:
@@ -80,8 +66,7 @@ In this case the task is implemented as a full Python class. The class *must*:
    i.e. a method returting an iterable of identified [PiiEntity]
 
  * the default task name will be taken from the class-level attribute
-   `pii_name`, if it exists, or else as the class name. Nevertheless, the name
-   can be dynammicaly set with each detected PiiEntity
+   `pii_name`, if it exists, or else as the class name.
 
 The class can also, optionally, include a constructor. In this case, the
 constructor must
@@ -101,30 +86,12 @@ In other words:
 An example can be seen in the [credit card] detector.
 
 
-## Task documentation
+## Context-based PII validation
 
-In addition to its name, all PII Tasks should be documented with a small
-string that explains what they detect. This can be automatically extracted
-from the task definition, if it is added in the right place:
- * Regex tasks need to use the "full" description to add documentation.
- * For Callable tasks, use the function docstring to add the documentation.
- * For Class tasks, add the documentation as the _class level_ docstring.
+If the task descriptor contains a [context definition], then all detected PII
+instances will be further validated by searching for context text around them.
 
-For any task type, if using the "full" description in `PII_TASKS`, a `doc`
-field can be added to the dictionary description, and it will override any
-automatic generation from docstrings.
-
-
-## Context-based PII confirmation
-
-### Context definition
-
-_documentation pending_
-
- 
-### Context implementation
-
-The base class for a task already implement a `find_context()` method that
+The base class for a task already implements a `find_context()` method that
 uses the context specification for the task (if it is defined) to assess
 detected candidates. This method is inherited by all subclasses, so if the
 task contains a context definition (as detailed above) all regex, callable or 
@@ -145,10 +112,12 @@ the `find()` method, i.e.
 
 
 
-[regex]: https://github.com/mrabarnett/mrab-regex
-[PiiEntity]: ../src/pii_extract/piientity.py
-[re.VERBOSE]: https://docs.python.org/3/library/re.html#re.X
+[task descriptor]: task-descriptor.md
+[context definition]: task-descriptor.md#context-validation
+[guidelines for creating PII regexes]: regex.md
+
+[PiiEntity]: https://github.com/piisa/pii-data/tree/main/doc/piientity.md
 
 [international phone number]: ../test/taux/modules/en/any/ipn.py
-[credit card]: ../test/taux/modules/any/credit_card.py
+[credit card]: ../test/taux/modules/any/credit_card_mock.py
 [Australian tax file number]: ../test/taux/modules/en/au/tfn.py

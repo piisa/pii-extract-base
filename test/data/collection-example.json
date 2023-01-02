@@ -6,7 +6,8 @@
     "stage": "detection",
     "detectors": {
       "1": {
-	"name": "international phone number",
+	"name": "regex for PHONE_NUMBER:international phone number",
+	"method": "regex,context",
 	"source": "piisa:pii-extract-base:test",
 	"version": "0.0.1"
       },
@@ -20,8 +21,11 @@
   "pii_list": [
     {
       "detector": 1,
+      "process": {
+	"stage": "detection"
+      },
       "type": "PHONE_NUMBER",
-      "status": "detected",
+      "subtype": "international phone number",
       "value": "+34983453999",
       "chunkid": "3",
       "country": "any",
@@ -32,8 +36,10 @@
     },
     {
       "detector": 2,
+      "process": {
+	"stage": "detection"
+      },
       "type": "CREDIT_CARD",
-      "status": "detected",
       "value": "4273 9666 4581 5642",
       "chunkid": "4",
       "subtype": "standard credit card",

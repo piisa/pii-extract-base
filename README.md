@@ -11,10 +11,10 @@ supplied [externally].
 
 ## Requirements
 
-The package 
- * needs at least Python 3.8
- * needs the [pii-data] base package
-
+The package needs
+ * at least Python 3.8
+ * the [pii-data] base package
+ * one or more pii-extract plugins (to actually do real detection work)
 
 ## Usage
 
@@ -47,4 +47,4 @@ g * `make unit` will launch all unit tests (using [pytest], so pytest must be
 
 [pytest]: https://docs.pytest.org
 [Personal Data]: https://en.wikipedia.org/wiki/Personal_data
-[externally]: doc/task%20definition.md
+[externally]: doc/adding-tasks.md

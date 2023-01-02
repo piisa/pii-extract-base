@@ -90,11 +90,16 @@ $(VENV)/bin/pytest:
 
 # -----------------------------------------------------------------------
 
-upload-check: $(PKGFILE)
-	twine check $(PKGFILE)
+TWINE := $(VENV)/bin/twine
 
-upload-test: $(PKGFILE)
-	twine upload --repository pypitest $(PKGFILE)
+$(TWINE):
+	$(VENV)/bin/pip install twine
 
-upload: $(PKGFILE)
-	twine upload $(PKGFILE)
+upload-check: $(PKGFILE) $(TWINE)
+	$(TWINE) check $(PKGFILE)
+
+upload-test: $(PKGFILE) $(TWINE)
+	$(TWINE) upload --repository pypitest $(PKGFILE)
+
+upload: $(PKGFILE) $(TWINE)
+	$(TWINE) upload $(PKGFILE)

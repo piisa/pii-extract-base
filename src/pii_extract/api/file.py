@@ -3,13 +3,14 @@ File-based API
 """
 
 import sys
+from textwrap import TextWrapper
 
 from typing import Dict, List, TextIO
 
-from pii_data.types.localdoc import LocalSrcDocumentFile
-from pii_data.helper.config import load_config
-from pii_data.helper.io import openfile, base_extension
 from pii_data.helper.exception import InvArgException
+from pii_data.helper.io import openfile, base_extension
+from pii_data.helper.config import load_config
+from pii_data.types.doc.localdoc import LocalSrcDocumentFile
 
 from ..helper.types import TYPE_STR_LIST
 from ..defs import FMT_CONFIG_PLUGIN, FMT_CONFIG_TASKS
@@ -20,11 +21,29 @@ def print_tasks(lang: str, proc: PiiProcessor, out: TextIO):
     """
     Print out the list of built tasks
     """
+    tw = TextWrapper(initial_indent="     ", subsequent_indent="     ", width=78)
     print(f". Built tasks [language={lang}]", file=out)
-    for (pii, country), tasklist in proc.task_info().items():
-        print(f"\n {pii.name}  [country={country}]   ", file=out)
-        for name, doc in tasklist:
-            print(f"     {name}: {doc}", file=out)
+    for (pii, subtype), tasklist in proc.task_info().items():
+        print(f"\n {pii.name}   {subtype if subtype else ''}", file=out)
+        for n, (country, name, doc) in enumerate(tasklist):
+            if n:
+                print()
+            print(f"   Country: {country}")
+            print(f"   Name: {name}")
+            if doc:
+                for ln in doc.splitlines():
+                    print(tw.fill(ln))
+
+
+def print_stats(stats: Dict[str, Dict], out: TextIO):
+    """
+    Print out statistics for the detection process
+    """
+    print("\n. Statistics:", file=out)
+    for name, vd in stats.items():
+        print("..", name, file=out)
+        for k, v in vd.items():
+            print(f"   {k:20} :  {v:5}", file=sys.stderr)
 
 
 def piic_format(filename: str) -> str:
@@ -45,8 +64,8 @@ def piic_format(filename: str) -> str:
 
 def process_file(infile: str,
                  outfile: str,
-                 load_plugins: bool = True,
                  configfile: TYPE_STR_LIST = None,
+                 skip_plugins: bool = False,
                  lang: str = None,
                  country: List[str] = None,
                  tasks: List[str] = None,
@@ -59,9 +78,9 @@ def process_file(infile: str,
     Process a number of PII tasks on a file holding a source document
       :param infile: input source document
       :param outfile: output file where to store the detected PII entities
-      :param load_plugins: load pii-extract task plugins
-      :param config: JSON configuration file(s) to add (defining plugin and/or
-         tasks)
+      :param configfile: JSON configuration file(s) to add (defining plugins
+         and/or tasks)
+      :param skip_plugins: skip loading pii-extract task plugins
       :param lang: language the document is in (if not defined inside the doc)
       :param country: countries to build tasks for (if None, all applicable
          countries for the language are used)
@@ -88,10 +107,10 @@ def process_file(infile: str,
         config = None
 
     # Create the object
-    proc = PiiProcessor(load_plugins=load_plugins, config=config, debug=debug)
+    proc = PiiProcessor(skip_plugins=skip_plugins, config=config, debug=debug)
 
     # Build the task objects
-    proc.build_tasks(lang, country, tasks=tasks)
+    proc.build_tasks(lang, country, pii=tasks)
     if show_tasks:
         print_tasks(lang, proc, sys.stderr)
 
@@ -111,8 +130,6 @@ def process_file(infile: str,
 
     stats = proc.get_stats()
     if show_stats:
-        print("\n. Statistics:", file=sys.stderr)
-        for k, v in stats.items():
-            print(f"  {k:20} :  {v:5}", file=sys.stderr)
+        print_stats(stats, sys.stderr)
 
     return stats

@@ -24,12 +24,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     g1.add_argument("--country", nargs="+", help="countries to use")
 
     g2 = parser.add_argument_group("Task specification")
+    g2.add_argument("--configfile", "--config", nargs="+",
+                    help="add pii tasks and/or plugins defined in JSON files")
+    g2.add_argument("--skip-plugins", action="store_true",
+                    help="do not load pii-extract plugins")
     g2.add_argument("--tasks", nargs="+", metavar="TASK_TYPE",
                     help="limit the set of pii tasks to include")
-    g2.add_argument("--config", nargs="+",
-                    help="add pii tasks and/or plugins defined in JSON files")
-    g2.add_argument("--skip-plugins", action="store_false",
-                    help="do not load pii-extract plugins")
 
     g2 = parser.add_argument_group("Processing options")
     g2.add_argument("--chunk-context", action="store_true",

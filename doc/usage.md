@@ -7,6 +7,28 @@ object instantiation) and the file-based API (higher-level, based on function
 calls).
 
 
+### File-based API
+
+The file-based API uses the `process_file` function to read an SrdDocument
+from a file and write the result as a PII Collection to an output file. It is
+executed as:
+
+```Python
+
+from pii_extract import PiiEnum
+from pii_extract.api import process_file
+
+# Define language, country(ies) and PII tasks
+lang = 'en'
+country = ['US', 'GB']
+tasklist = (PiiEnum.CREDIT_CARD, PiiEnum.GOVID, PiiEnum.MEDICAL)
+
+# Process the file
+process_file(infilename, outfilename, lang,
+             country=country, pii=tasklist)
+```
+
+
 ### Object API
 
 The object-based API is centered on the `PiiProcessor` object. Its usage goes
@@ -26,17 +48,19 @@ tasklist = (PiiEnum.CREDIT_CARD, PiiEnum.GOVID, PiiEnum.DISEASE)
 proc = PiiProcessor()
 
 # Build the task objects
-proc.build_tasks(lang, country=country, tasks=tasklist)
+proc.build_tasks(lang, country=country, pii=tasklist)
 
 # Process a SourceDocument
 piic = proc(doc)
 
+for pii in piic:
+  print(pii.asdict())
 ```
 
 ... this will load and execute PII extraction tasks for English that will
 anonymize credit card numbers, disease information, and Government IDs for US
-and UK (assuming all these tasks are implemented in the package), and produce
-a `PiiCollection` object with the results.
+and UK (assuming all these tasks are implemented and available to the package),
+and produce a `PiiCollection` object with the results.
 
 
 It is also possible to load **all** possible tasks for a language, by not 
@@ -62,24 +86,26 @@ piic = proc(doc)
    language
 
 
-### File-based API
+### Raw text API
 
-The file-based API uses the `process_file` function to read from a file and
-write the result to an output file. It is executed as:
+It is also possible to use the object API to process a raw text buffer. For
+that we can define a `DocumentChunk` on the fly:
 
 ```Python
 
-from pii_extract import PiiEnum
-from pii_extract.api import process_file
+from pii_data.types.doc import DocumentChunk
+from pii_extract.api import PiiProcessor, PiiCollectionBuilder
 
-# Define language, country(ies) and PII tasks
-lang = 'en'
-country = ['US', 'GB']
-tasklist = (PiiEnum.CREDIT_CARD, PiiEnum.GOVID, PiiEnum.DISEASE)
+chunk = DocumentChunk(id=0, data="...a text buffer...")
 
-# Process the file
-process_file(infilename, outfilename, lang,
-             country=country, tasks=tasklist)
+proc = PiiProcesor()
+proc.build_tasks(lang="en")
+
+piic = PiiCollectionBuilder(lang="en")
+proc.detect_chunk(chunk, piic)
+
+for pii in piic:
+  print(pii.asdict())
 ```
 
 
@@ -89,7 +115,7 @@ Installing the package provides also a command-line script, `pii-detect`,
 that can be used to process files through PII tasks:
 
     pii-detect <infile> <outfile> --lang es --country es ar mx \
-       --tasks CREDIT_CARD BITCOIN_ADDRESS BANK_ACCOUNT
+       --tasks CREDIT_CARD BLOCKCHAIN_ADDRESS BANK_ACCOUNT
 
 or, to add all possible tasks for a given language:
 
@@ -105,12 +131,10 @@ language.
 
 ## Gathering tasks
 
-The tasks that the package can collect and make available to the API are:
+The tasks that the package can [collect and make available] to the API are:
  * Tasks provided in a pii-extract plugin, such as [pii-extract-plg-regex]
- * Tasks defined in a supplied JSON task file
+ * Tasks defined in a JSON task file added as configuration
 
 
-[NDJSON]: http://ndjson.org/
+[collect and made available]: task-collection.md
 [pii-extract-plg-regex]: http://github.com/piisa/pii-extract-plg-regex
-[importing arbitrary tasks]: external.md#object-based-api
-[import external tasks]:external.md#file-based-api

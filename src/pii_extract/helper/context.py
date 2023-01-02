@@ -6,14 +6,15 @@ import regex
 
 from typing import Tuple, List, Dict, Union
 
+from ..defs import LANG_ANY
 from .exception import InvArgException
 from .normalizer import normalize
 
 
-# Default width around a Pii where context is searched for
+# Default width around a Pii value where context is searched for
 DEFAULT_CONTEXT_WIDTH = 64
 
-# Normalization options used when matching contexts
+# Normalization options used when processing context prototypes
 CONTEXT_NORM_OPTIONS = dict(whitespace=True, lowercase=True)
 
 
@@ -101,9 +102,19 @@ def context_check(text: str, context_spec: Dict, pii_pos: Tuple[int]) -> bool:
     elif len(pii_pos) == 1:
         pii_pos.append(pii_pos[0])
 
-    # Extract context chunk
-    start = max(pii_pos[0] - width[0], 0)
-    src = text[start:pii_pos[0]] + " " + text[pii_pos[1]:pii_pos[1] + width[1]]
+    # Extract context before and/or after the entity
+    if width[0]:
+        src1 = normalize(text[:pii_pos[0]], whitespace=True)
+        start = max(len(src1) - width[0], 0)
+        src = src1[start:]
+    else:
+        src = ""
+
+    if width[1]:
+        src2 = normalize(text[pii_pos[1]:], whitespace=True)
+        if src:
+            src += " "
+        src += src2[:width[1]]
 
     # Match
     if context_spec["regex"]:
