@@ -23,6 +23,7 @@ def _add_defaults(task: Dict) -> Dict:
 
 def test200_constructor():
     """
+    Test constructor
     """
     tc = mod.PiiTaskCollection()
     assert str(tc) == "<PiiTaskCollection #0>"
@@ -30,12 +31,13 @@ def test200_constructor():
 
 def test210_collect():
     """
+    Test collecting tasks
     """
     tc = mod.PiiTaskCollection()
     tcol = MyTestTaskCollector()
     num = tc.add_collector(tcol)
-    assert num == 3
-    assert str(tc) == "<PiiTaskCollection #3>"
+    assert num == 4
+    assert str(tc) == "<PiiTaskCollection #4>"
 
 
 def test220_task_search():
@@ -66,8 +68,9 @@ def test221_task_search():
 
     for c in ("au", None):
         got = list(tc.taskdef_list(lang="en", country=c, pii=PiiEnum.GOV_ID))
-        assert len(got) == 1
-        assert _add_defaults(TASKD.TASK_GOVID) == got[0]
+        assert len(got) == 2
+        assert _add_defaults(TASKD.TASK_GOVID_1) == got[0]
+        assert _add_defaults(TASKD.TASK_GOVID_2) == got[1]
 
 
 def test222_task_search():
@@ -127,15 +130,16 @@ def test230_task_all():
     tc.add_collector(tcol)
 
     got = list(tc.taskdef_list())
-    assert len(got) == 3
+    assert len(got) == 4
 
     pii_list = [t["piid"]["pii"] for t in got]
     assert pii_list == [PiiEnum.CREDIT_CARD, PiiEnum.PHONE_NUMBER,
-                        PiiEnum.GOV_ID]
+                        PiiEnum.GOV_ID, PiiEnum.GOV_ID]
 
     assert got[0] == _add_defaults(TASKD.TASK_CREDIT_CARD)
     assert got[1] == _add_defaults(TASKD.TASK_PHONE_NUMBER)
-    assert got[2] == _add_defaults(TASKD.TASK_GOVID)
+    assert got[2] == _add_defaults(TASKD.TASK_GOVID_1)
+    assert got[3] == _add_defaults(TASKD.TASK_GOVID_2)
 
 
 def test300_task_build_all():
@@ -148,8 +152,8 @@ def test300_task_build_all():
     build = lambda *args: list(tc.build_tasks(*args))
 
     got = build()
-    assert len(got) == 3
-    exp = [BasePiiTask, RegexPiiTask, CallablePiiTask]
+    assert len(got) == 4
+    exp = [BasePiiTask, RegexPiiTask, CallablePiiTask, CallablePiiTask]
     for e, g in zip(exp, got):
         assert isinstance(g, e)
 
@@ -165,22 +169,22 @@ def test310_task_build_lang_country():
 
     # All for English
     got = build('en')
-    assert len(got) == 3
-    exp = [BasePiiTask, RegexPiiTask, CallablePiiTask]
+    assert len(got) == 4
+    exp = [BasePiiTask, RegexPiiTask, CallablePiiTask, CallablePiiTask]
     for e, g in zip(exp, got):
         assert isinstance(g, e)
 
     # All for English & Australia
     got = build('en', 'au')
-    assert len(got) == 3
-    exp = [BasePiiTask, RegexPiiTask, CallablePiiTask]
+    assert len(got) == 4
+    exp = [BasePiiTask, RegexPiiTask, CallablePiiTask, CallablePiiTask]
     for e, g in zip(exp, got):
         assert isinstance(g, e)
 
     # All for English & Australia, don't add country/lang independent tasks
     got = build('en', 'au', add_any=False)
-    assert len(got) == 1
-    exp = [CallablePiiTask]
+    assert len(got) == 2
+    exp = [CallablePiiTask, CallablePiiTask]
     for e, g in zip(exp, got):
         assert isinstance(g, e)
 
@@ -195,8 +199,8 @@ def test310_task_build_lang_country():
     # We don't add CREDIT_CARD (lang=any) but we *do* add PHONE_NUMBER
     # (country=any), since we are adding all countries
     got = build('en', add_any=False)
-    assert len(got) == 2
-    exp = [RegexPiiTask, CallablePiiTask]
+    assert len(got) == 3
+    exp = [RegexPiiTask, CallablePiiTask, CallablePiiTask]
     for e, g in zip(exp, got):
         assert isinstance(g, e)
 
@@ -226,6 +230,7 @@ def test320_task_build_tasks():
     # Build a list of tasks
     tlist = ["GOV_ID", PiiEnum.CREDIT_CARD]
     got = build(pii=tlist)
-    assert len(got) == 2
+    assert len(got) == 3
     assert got[0].pii_info.pii == PiiEnum.CREDIT_CARD
     assert got[1].pii_info.pii == PiiEnum.GOV_ID
+    assert got[2].pii_info.pii == PiiEnum.GOV_ID

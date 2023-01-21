@@ -26,7 +26,7 @@ def test110_build_callable():
     """
     Test building a callable PiiTask
     """
-    task = mod.build_task(TASKD.TASK_GOVID)
+    task = mod.build_task(TASKD.TASK_GOVID_1)
     assert isinstance(task, CallablePiiTask)
 
 

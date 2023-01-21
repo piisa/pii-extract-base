@@ -30,15 +30,23 @@ class CallablePiiTask(BasePiiTask):
 
     def find(self, chunk: DocumentChunk) -> Iterable[PiiEntity]:
         """
-        Call the function, get all returned strings, and locate them in the
-        passed document to generate the Pii objects
+        Call the function, get all returned strings, and if needed locate them
+        in the passed document to generate the Pii objects
         """
-        defaults = self.get_pii_defaults()
+        kwargs = self.get_pii_defaults()
         for cc in self.call(chunk.data, **self.kwargs):
+
+            # If we're given a tuple, it's (string, position); we can create
+            # the PiiEntity and move on
+            if isinstance(cc, tuple):
+                yield PiiEntity(self.pii_info, cc[1], chunk.id, cc[0], **kwargs)
+                continue
+
+            # Else it's a string; we need to _find_ its position(s)
             start = 0
             while True:
                 pos = chunk.data.find(cc, start)
                 if pos < 0:
                     break
-                yield PiiEntity(self.pii_info, cc, chunk.id, pos, **defaults)
+                yield PiiEntity(self.pii_info, cc, chunk.id, pos, **kwargs)
                 start = pos + len(cc)

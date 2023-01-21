@@ -20,7 +20,7 @@ def _valid_tfn(tfn: str) -> bool:
     return True
 
 
-def tax_file_number(doc: str) -> Iterable[str]:
+def tax_file_number_example(doc: str) -> Iterable[str]:
     """
     Australian Tax File Number (detect and validate)
     """
@@ -29,4 +29,4 @@ def tax_file_number(doc: str) -> Iterable[str]:
             yield candidate
 
 
-PII_TASKS = [(PiiEnum.GOV_ID, tax_file_number)]
+PII_TASKS = [(PiiEnum.GOV_ID, tax_file_number_example)]

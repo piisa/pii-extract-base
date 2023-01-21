@@ -28,8 +28,9 @@ TASK_CREDIT_CARD = {
 def _check_tasklist(tasklist: Iterable[Dict]):
 
     tasklist = list(tasklist)
-    assert len(tasklist) == 3
-    exp = [PiiEnum.CREDIT_CARD, PiiEnum.PHONE_NUMBER, PiiEnum.GOV_ID]
+    assert len(tasklist) == 4
+    exp = [PiiEnum.CREDIT_CARD, PiiEnum.PHONE_NUMBER,
+           PiiEnum.GOV_ID, PiiEnum.GOV_ID]
     got = [t["pii"][0]["type"] for t in tasklist]
     assert exp == got
 
@@ -84,9 +85,10 @@ def test120_gather_tasks():
     }
     # Only lang == en (but "any" is also added)
     got = list(tc.gather_tasks("en"))
-    assert len(got) == 2
+    assert len(got) == 3
     assert got[0]["pii"][0] == pii_phone
     assert got[1]["pii"][0] == {"type": PiiEnum.GOV_ID, "country": "au",
+                                "subtype": "Australian Business Number",
                                 "lang": "en"}
 
     # Only lang == en, country == any
@@ -96,8 +98,9 @@ def test120_gather_tasks():
 
     # Only lang == en, country == au
     got = list(tc.gather_tasks("en", "au"))
-    assert len(got) == 1
+    assert len(got) == 2
     assert got[0]["pii"][0] == {"type": PiiEnum.GOV_ID, "country": "au",
+                                "subtype": "Australian Business Number",
                                 "lang": "en"}
 
 
@@ -116,8 +119,8 @@ def test140_gather_lang_single():
     tc = MyTestTaskCollector()
 
     tasklist = list(tc.gather_tasks("en"))
-    assert len(tasklist) == 2
-    exp = [PiiEnum.PHONE_NUMBER, PiiEnum.GOV_ID]
+    assert len(tasklist) == 3
+    exp = [PiiEnum.PHONE_NUMBER, PiiEnum.GOV_ID, PiiEnum.GOV_ID]
     got = [t["pii"][0]["type"] for t in tasklist]
     assert exp == got
 
@@ -153,5 +156,5 @@ def test170_gather_all_filter():
     tc = MyTestTaskCollector(pii_filter=[PiiEnum.GOV_ID, PiiEnum.CREDIT_CARD])
     tasks = tc.gather_tasks()
     got = [t["pii"][0]["type"] for t in tasks]
-    exp = [PiiEnum.CREDIT_CARD, PiiEnum.GOV_ID]
+    exp = [PiiEnum.CREDIT_CARD, PiiEnum.GOV_ID, PiiEnum.GOV_ID]
     assert exp == got

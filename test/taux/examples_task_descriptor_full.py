@@ -6,7 +6,8 @@ from pii_data.types import PiiEnum
 
 from taux.modules.any.credit_card_mock import CreditCardMock
 from taux.modules.en.any.international_phone_number import PATTERN_INT_PHONE
-from taux.modules.en.au.tfn import tax_file_number
+from taux.modules.en.au.abn_ex import australian_business_number_example
+from taux.modules.en.au.tfn_ex import tax_file_number_example
 
 # -------------------------------------------------------------------------
 
@@ -29,20 +30,37 @@ TASK_PHONE_NUMBER = {
     }
 }
 
-TASK_GOVID = {
+TASK_GOVID_1 = {
     'obj': {
         'class': 'callable',
-        'task': tax_file_number
+        'task': australian_business_number_example
     },
     'info': {
-        'name': 'tax file number',
+        'name': 'australian business number example',
+        'doc': 'Australian Business Number (detect and validate)'
+    },
+    'piid': {
+        'pii': PiiEnum.GOV_ID,
+        'lang': 'en',
+        'country': 'au',
+        'subtype': 'Australian Business Number'
+    }
+}
+
+
+TASK_GOVID_2 = {
+    'obj': {
+        'class': 'callable',
+        'task': tax_file_number_example
+    },
+    'info': {
+        'name': 'tax file number example',
         'doc': 'Australian Tax File Number (detect and validate)'
     },
     'piid': {
         'pii': PiiEnum.GOV_ID,
         'lang': 'en',
         'country': 'au'
-        #'subtype': 'tax file number'
     }
 }
 

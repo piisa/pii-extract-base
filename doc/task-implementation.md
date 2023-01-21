@@ -25,7 +25,9 @@ is:
 
 ```Python
 
-   def my_pii_detector(src: str) -> Iterable[str]:
+   RETURN_TYPE = Union[str, Tuple[str, int]]
+
+   def my_pii_detector(src: str) -> Iterable[RETURN_TYPE]:
 ```
 
 The function can have any name, but it may be good to have an illustrative name,
@@ -36,21 +38,26 @@ into spaces).
 The function should:
 
  * accept a string: the document chunk to analyze
- * return an iterable of strings: the string fragments corresponding to the
-   PII entities that were identified in the document
+ * return an iterable that can produce two types of results:
+     * a tuple `(<string>, <position>)`, indicating a detected PII text and
+       its position in the text chunk
+     * a single string: this is a detected PII text. The framework will find
+       its position in the text chunk (if it appears more than once, it will
+       report it for each occurrence)
 
 An example can be seen in the [australian tax file number] detector.
 
-**Note**: in case the same entity appears more than once in the passed
-document, it might be possible that the callable returns repeated strings.
-This is not a problem; all of them will be reported.
-
-Conversely, if a given string in the document is a PII some of the time but
+**Note**: the second option (single-string results) could produce
+ambiguity. If a given string in the document is a PII some of the time but
 it also appears in a non-PII role in the same document, the wrapper that uses
 the result of a callable implementation type will not be able to differentiate
 among them, and the package will label *all* ocurrences of the string as PII.
 If this is likely to happen, and there is code that *can* separate both uses,
-then it is better to use the class implementation type below.
+use the first return option (tuple), or the class implementation type below.
+
+Conversely, in case the same entity appears more than once in the passed
+document and the callable produces multiple reports for them, the second return
+form might produce PII duplicates.
 
 
 ## Class implementation
