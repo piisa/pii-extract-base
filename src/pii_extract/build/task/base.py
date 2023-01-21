@@ -97,7 +97,7 @@ class BasePiiTask:
     def find_context(self, chunk: DocumentChunk) -> Iterable[PiiEntity]:
         """
         Wrap over the standard find() method and filter out the occcurences
-.        that do not match the desired context around them
+        that do not match the desired context around them
         """
         ndoc = None
         for pii in self.find(chunk):

@@ -39,7 +39,7 @@ class CallablePiiTask(BasePiiTask):
             # If we're given a tuple, it's (string, position); we can create
             # the PiiEntity and move on
             if isinstance(cc, tuple):
-                yield PiiEntity(self.pii_info, cc[1], chunk.id, cc[0], **kwargs)
+                yield PiiEntity(self.pii_info, cc[0], chunk.id, cc[1], **kwargs)
                 continue
 
             # Else it's a string; we need to _find_ its position(s)
