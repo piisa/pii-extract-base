@@ -9,8 +9,8 @@ calls).
 
 ### File-based API
 
-The file-based API uses the `process_file` function to read an SrdDocument
-from a file and write the result as a PII Collection to an output file. It is
+The file-based API uses the `process_file` function to read an [SrcDocument]
+from a file and write the result as a [PII Collection] to an output file. It is
 executed as:
 
 ```Python
@@ -31,8 +31,8 @@ process_file(infilename, outfilename, lang,
 
 ### Object API
 
-The object-based API is centered on the `PiiProcessor` object. Its usage goes
-like this:
+The object-based API is centered on the `PiiProcessor` object, and it works
+with in-memory objects. Its usage goes like this:
 
 ```Python
 
@@ -136,5 +136,7 @@ The tasks that the package can [collect and make available] to the API are:
  * Tasks defined in a JSON task file added as configuration
 
 
-[collect and made available]: task-collection.md
+[SrcDocument]: https://github.com/piisa/pii-data/blob/main/doc/srcdocument.md
+[PII Collection]: https://github.com/piisa/pii-data/blob/main/doc/piicollection.md
+[collect and make available]: task-collection.md
 [pii-extract-plg-regex]: http://github.com/piisa/pii-extract-plg-regex

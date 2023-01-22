@@ -20,7 +20,7 @@
 * The pattern will be compiled with the [re.VERBOSE] (aka `re.X`) flag, so
   take that into account (in particular, **whitespace is ignored**, so if it is
   part of the regular expression needs to included as a category i.e. `\s`, or
-  escaped as `\ ')
+  escaped as `\ `)
   
 
 ## Method qualification

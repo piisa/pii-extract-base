@@ -25,7 +25,8 @@ Plugin instantiation can be customized by a
 by plugin entry point. Each plugin configuration can contain:
  * `load`: a boolean parameter indicating whether to load the plugin (default
    is `True`)
- * `options`: a dict of keyword arguments to pass to the plugin constructor
+ * `options`: a dict of keyword arguments to pass to the plugin
+   constructor. Those are specific for each plugin, and they are passed "as is".
  
  
 A plugin constructor will have as arguments:
@@ -43,7 +44,7 @@ the task is inside a plugin, no further action is needed.
 
 Tasks can also be added by using a package configuration, with tag 
 `piisa:config:extract:tasks:v1`. This configuration will have:
-  * the `format` field
+  * the `format` field, containing the tag just mentioned
   * a `header` field, that can contain a dictionary of default task descriptor
     fields
   * a `tasklist` field, which will contain a list of task descriptors.

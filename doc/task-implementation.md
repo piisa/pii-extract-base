@@ -9,7 +9,7 @@ Once defined, a task is made available to the framework via a [task
 descriptor], which defines all the fields needed to use the task.
 
 
-## Regex implementation
+## 1. Regex implementation
 
 In its simplest form, a PII Task can be just a regular expression pattern.
 This pattern should match string fragments that correspond to the PII entity 
@@ -18,7 +18,7 @@ to be detected. See the [guidelines for creating PII regexes].
 An example can be seen in the [international phone number] detector.
 
 
-## Callable implementation
+## 2. Callable implementation
 
 The next implementation type is via a function. The signature for the function
 is:
@@ -38,16 +38,17 @@ into spaces).
 The function should:
 
  * accept a string: the document chunk to analyze
- * return an iterable that can produce two types of results:
+ * return an iterable that produces detection results. It can produce two types
+   of results:
      * a tuple `(<string>, <position>)`, indicating a detected PII text and
        its position in the text chunk
      * a single string: this is a detected PII text. The framework will find
        its position in the text chunk (if it appears more than once, it will
        report it for each occurrence)
 
-An example can be seen in the [australian tax file number] detector.
+An example can be seen in the [australian business number] detector.
 
-**Note**: the second option (single-string results) could produce
+**Note**: the second return option (single-string results) could produce
 ambiguity. If a given string in the document is a PII some of the time but
 it also appears in a non-PII role in the same document, the wrapper that uses
 the result of a callable implementation type will not be able to differentiate
@@ -60,7 +61,7 @@ document and the callable produces multiple reports for them, the second return
 form might produce PII duplicates.
 
 
-## Class implementation
+## 3. Class implementation
 
 In this case the task is implemented as a full Python class. The class *must*:
 
@@ -125,6 +126,6 @@ the `find()` method, i.e.
 
 [PiiEntity]: https://github.com/piisa/pii-data/tree/main/doc/piientity.md
 
-[international phone number]: ../test/taux/modules/en/any/ipn.py
+[international phone number]: ../test/taux/modules/en/any/international_phone_number.py
 [credit card]: ../test/taux/modules/any/credit_card_mock.py
-[Australian tax file number]: ../test/taux/modules/en/au/tfn.py
+[Australian business number]: ../test/taux/modules/en/au/abn_ex.py

@@ -43,10 +43,11 @@ version:
 
 backup: version
 	tar cvjf $(NAME)-$(VERSION).tgz \
-	 --exclude=__pycache__ --exclude=pii_extract.egg-info \
-	doc src test \
-	CHANGES.txt LICENSE README.md \
-	Makefile MANIFEST.in requirements.txt setup.py
+	  --exclude=__pycache__ --exclude=pii_extract.egg-info \
+	  doc src test \
+	  CHANGES.txt LICENSE README.md \
+	  Makefile MANIFEST.in requirements.txt setup.py
+	@echo "** Created $(NAME)-$(VERSION).tgz"
 
 # --------------------------------------------------------------------------
 
@@ -73,7 +74,7 @@ unit-full: venv pytest
 $(PKGFILE): $(VERSION_FILE) setup.py
 	$(VENV_PYTHON) setup.py sdist
 
-install: $(PKGFILE)
+install: $(PKGFILE) venv
 	$(VENV)/bin/pip install $(PKGFILE)
 
 uninstall:
