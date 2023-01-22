@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "date": "2045-01-30",
+    "format": "piisa:pii-collection:v1",
+    "lang": "en",
+    "stage": "detection",
+    "detectors": {
+      "1": {
+	"name": "regex for PHONE_NUMBER:international phone number",
+	"method": "regex,context",
+	"source": "piisa:pii-extract-base:test",
+	"version": "0.0.1"
+      },
+      "2": {
+	"name": "standard credit card",
+	"source": "piisa:pii-extract-base:test",
+	"version": "0.0.1"
+      }
+    }
+  },
+  "pii_list": [
+    {
+      "detector": 1,
+      "process": {
+	"stage": "detection"
+      },
+      "type": "PHONE_NUMBER",
+      "subtype": "international phone number",
+      "value": "+34983453999",
+      "chunkid": "3",
+      "country": "any",
+      "lang": "en",
+      "docid": "00000-11111",
+      "start": 44,
+      "end": 56
+    },
+    {
+      "detector": 2,
+      "process": {
+	"stage": "detection"
+      },
+      "type": "CREDIT_CARD",
+      "value": "4273 9666 4581 5642",
+      "chunkid": "4",
+      "subtype": "standard credit card",
+      "lang": "en",
+      "docid": "00000-11111",
+      "start": 25,
+      "end": 44
+    }
+  ]
+}

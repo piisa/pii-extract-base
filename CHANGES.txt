@@ -1,0 +1,18 @@
+0.2.0
+ * another refactor, enabling task plugins
+ * split it into `pii-extract-base` and `pii-extract-plg-regex` plugin
+ * manage configurations
+ * multi-tasks are now available
+
+0.1.0
+ * full refactor, new package is `pii-manager`
+ * there are now three modes for task implementation
+ * three processing modes (replace, tag, extract)
+ * a file-based API and an object-based API
+ * manage configuration files
+    - task configurations
+    - plugin configurations
+ * added "status" to PiiInstance objects
+ * when building tasks, use "multi_type" task info to allow mult-type tasks
+ 
+ 

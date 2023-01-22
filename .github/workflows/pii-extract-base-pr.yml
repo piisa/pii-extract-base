@@ -1,0 +1,49 @@
+on:
+   pull_request:
+     branches:
+      - main
+     paths:
+      - 'src/**'
+      - 'test/**'
+      - 'setup.py'
+      - 'Makefile'
+      - 'requirements.txt'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Checkout package repository
+      uses: actions/checkout@v3
+      with:
+        path: pii-extract-base
+    - name: Checkout pii-data dependency
+      uses: actions/checkout@main
+      with:
+        repository: piisa/pii-data
+        path: pii-data
+    - name: Create venv
+      run: |
+        cd pii-extract-base
+        VENV="$GITHUB_WORKSPACE/venv" PYTHON="python${{matrix.python-version}}" make venv
+    - name: Install pii-data
+      run: |
+        cd pii-data
+        VENV=$GITHUB_WORKSPACE/venv make install
+    - name: Install main package
+      run: |
+        cd pii-extract-base
+        VENV="$GITHUB_WORKSPACE/venv" make install
+    - name: Test with pytest
+      run: |
+        cd pii-extract-base
+        VENV="$GITHUB_WORKSPACE/venv" make unit-verbose
