@@ -1,3 +1,7 @@
+0.2.1
+ * improvements in debug output
+ * fix: country filter should not act if the task does not have a country
+
 0.2.0
  * another refactor, enabling task plugins
  * split it into `pii-extract-base` and `pii-extract-plg-regex` plugin

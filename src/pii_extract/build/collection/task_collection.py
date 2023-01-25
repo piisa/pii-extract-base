@@ -46,14 +46,17 @@ def piid_ok(piid: Dict, lang: Set[str], country: Set[str],
     """
     Decide if a PII descriptor agrees with a language/country filter
     """
+    if pii and not pii & taskd_field(piid, "pii"):
+        return False
+
     if lang and not lang & taskd_field(piid, "lang"):
         return False
 
-    if country and not country & taskd_field(piid, "country"):
-        return False
-
-    if pii and not pii & taskd_field(piid, "pii"):
-        return False
+    # Country is different: the task descriptor may not have it
+    if country:
+        task_country = taskd_field(piid, "country")
+        if task_country and not country & task_country:
+            return False
 
     return True
 
@@ -150,7 +153,7 @@ class PiiTaskCollection:
           :param add_any: if False,
               - do not add "any" lang tasks, except if explicitly requested
               - do not add "any" country tasks, unless explicitly requested or
-                all languages requested
+                all languages have been requested
           :return: an iterable of task definitions
         """
         # Consolidate filters
