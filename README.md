@@ -30,7 +30,7 @@ For details, see the [usage document].
 The provided [Makefile] can be used to process the package:
  * `make pkg` will build the Python package, creating a file that can be
    installed with `pip`
-g * `make unit` will launch all unit tests (using [pytest], so pytest must be
+ * `make unit` will launch all unit tests (using [pytest], so pytest must be
    available)
  * `make install` will install the package in a Python virtualenv. The
    virtualenv will be chosen as, in this order:
