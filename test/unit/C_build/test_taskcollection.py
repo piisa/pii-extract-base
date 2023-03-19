@@ -160,6 +160,7 @@ def test300_task_build_all():
 
 def test310_task_build_lang_country():
     """
+    Build tasks for some languages/countries
     """
     tc = mod.PiiTaskCollection()
     tcol = MyTestTaskCollector()
@@ -212,8 +213,63 @@ def test310_task_build_lang_country():
     assert len(got) == 0
 
 
-def test320_task_build_tasks():
+def test320_task_build_reuse():
     """
+    Test reusing built tasks
+    """
+    tc = mod.PiiTaskCollection()
+    tcol = MyTestTaskCollector()
+    tc.add_collector(tcol)
+    assert tc.num(False) == 4
+    assert tc.num(True) == 0
+
+    build = lambda *args, **kwargs: list(tc.build_tasks(*args, **kwargs))
+
+    # All for English & Australia, don't add country/lang independent tasks
+    got = build('en', 'au', add_any=False)
+    assert len(got) == 2
+    exp = [CallablePiiTask, CallablePiiTask]
+    for e, g in zip(exp, got):
+        assert isinstance(g, e)
+    assert tc.num(True) == 2
+
+    got = build('zh')
+    assert len(got) == 1
+    assert isinstance(got[0], BasePiiTask)
+    assert tc.num(True) == 3
+
+
+    # All for English, don't add lang independent tasks
+    # We don't add CREDIT_CARD (lang=any) but we *do* add PHONE_NUMBER
+    # (country=any), since we are adding all countries
+    got = build('en', add_any=False)
+    assert len(got) == 3
+    exp = [RegexPiiTask, CallablePiiTask, CallablePiiTask]
+    for e, g in zip(exp, got):
+        assert isinstance(g, e)
+    assert tc.num(True) == 4
+
+
+    # All for English & Great Britain -- no new rasks
+    got = build('en', 'gb')
+    assert len(got) == 2
+    exp = [BasePiiTask, RegexPiiTask]
+    for e, g in zip(exp, got):
+        assert isinstance(g, e)
+    assert tc.num(True) == 4
+
+    # All for English
+    got = build('en')
+    assert len(got) == 4
+    exp = [BasePiiTask, RegexPiiTask, CallablePiiTask, CallablePiiTask]
+    for e, g in zip(exp, got):
+        assert isinstance(g, e)
+    assert tc.num(True) == 4
+
+
+def test330_task_build_tasks():
+    """
+    Build specific tasks
     """
     tc = mod.PiiTaskCollection()
     tcol = MyTestTaskCollector()

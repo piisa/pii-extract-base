@@ -44,9 +44,9 @@ class PiiTaskInfo:
 class BasePiiTask:
     """
     Base class for a Pii Detector Task
-.    """
+.   """
 
-    def __init__(self, task: Dict, pii: Dict):
+    def __init__(self, task: Dict, pii: Dict, debug: bool = False):
         """
         Base constructor
           :param task: a task info dictionary
@@ -69,6 +69,7 @@ class BasePiiTask:
         # Store options
         self.pii_info = PiiEntityInfo(**pii_info)
         self.task_info = PiiTaskInfo(**(task or {}))
+        self.debug = debug
 
 
     def get_method(self, pii: Any, **kwargs):
@@ -91,7 +92,8 @@ class BasePiiTask:
         Check that a pii candidate has the required context around it
         """
         return context_check(text, self.context,
-                             [prefix + pii.pos, prefix + pii.pos + len(pii)])
+                             [prefix + pii.pos, prefix + pii.pos + len(pii)],
+                             debug=self.debug)
 
 
     def find_context(self, chunk: DocumentChunk) -> Iterable[PiiEntity]:

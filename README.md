@@ -1,5 +1,10 @@
 # Pii Extract Base
 
+[![version](https://img.shields.io/pypi/v/pii-extract-base)](https://pypi.org/project/pii-extract-base)
+[![changelog](https://img.shields.io/badge/change-log-blue)](CHANGES.md)
+[![license](https://img.shields.io/pypi/l/pii-extract-base)](LICENSE)
+[![build status](https://github.com/piisa/pii-extract-base/actions/workflows/pii-extract-base-pr.yml/badge.svg)](https://github.com/piisa/pii-extract-base/actions)
+
 This repository builds a Python package providing a base library for PII 
 detection for Source Documents i.e. extraction of PII (Personally Identifiable
 Information aka [Personal Data]) items existing in the document.

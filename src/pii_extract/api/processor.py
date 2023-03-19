@@ -8,17 +8,35 @@ Definition of the main PiiProcessor object: a class that
 
 import logging
 from collections import defaultdict
+from itertools import chain
 
 from typing import Tuple, List, Dict, Iterable, Union
 
 from pii_data.types import PiiEntityInfo, PiiEntity, PiiDetector, PiiCollection
 from pii_data.types.doc import SrcDocument, DocumentChunk
-from pii_data.helper.exception import ProcException
+from pii_data.helper.exception import ProcException, InvArgException
 
 from ..helper.logger import PiiLogger
 from ..gather.collector import JsonTaskCollector
 from ..build.task import PiiTaskInfo
 from ..build.collection import get_task_collection, TYPE_TASKENUM
+
+
+
+TYPE_LANG = Union[str, Iterable[str]]
+
+def check_language(lang1: TYPE_LANG, lang2: TYPE_LANG) -> bool:
+    """
+    Check language compatibility
+    """
+    if lang1 is None or lang2 is None:
+        return True
+    if isinstance(lang1, str):
+        lang1 = [lang1]
+    if isinstance(lang2, str):
+        lang2 = [lang2]
+    return bool(set(lang1) & set(lang2))
+
 
 
 class PiiCollectionBuilder(PiiCollection):
@@ -56,7 +74,7 @@ class PiiProcessor:
         """
         self._debug = debug
         self._log = PiiLogger(__name__, debug)
-        self._tasks = None
+        self._tasks = {}
         self._stats = {"num": defaultdict(int), "entities": defaultdict(int)}
         self._ptc = get_task_collection(load_plugins=not skip_plugins,
                                         config=config, debug=debug)
@@ -77,7 +95,7 @@ class PiiProcessor:
 
     def language_list(self) -> Iterable[str]:
         """
-        Return the list of all languages with defined tasks
+        Return the list of all languages that have available tasks
         """
         return sorted(self._ptc.language_list())
 
@@ -95,29 +113,33 @@ class PiiProcessor:
             tasks valid for "any"
         """
         # Sanitize input
-        self._lang = lang.lower() if lang else None
+        lang = lang.lower() if lang else None
         self._log(". Build tasks: %s", lang)
         if isinstance(country, str):
             country = [country]
         self._country = [c.lower() for c in country] if country else None
         # Build the list of tasks
-        tasks = self._ptc.build_tasks(self._lang, self._country,
+        tasks = self._ptc.build_tasks(lang, self._country,
                                       pii=pii, add_any=add_any)
-        self._tasks = list(tasks)
-        return len(self._tasks)
+        self._tasks[lang] = list(tasks)
+        return len(self._tasks[lang])
 
 
-    def task_info(self) -> Dict[Tuple, Tuple]:
+    def task_info(self, lang: str = None) -> Dict[Tuple, Tuple]:
         """
         Return a dictionary with all the instantiated tasks:
           - keys are tuples (task id, subtype)
           - values are lists of tuples (country, task name, task doc)
         """
-        if self._tasks is None:
+        if not self._tasks:
             raise ProcException("no detector tasks have been built")
+        elif lang and lang not in self._tasks:
+            raise InvArgException("no detector tasks have been built for {}", lang)
+
+        tasklist = self._tasks[lang] if lang else chain.from_iterable(self._tasks.values())
 
         info = defaultdict(list)
-        for t in self._tasks:
+        for t in tasklist:
             pii_list = t.pii_info
             if isinstance(pii_list, PiiEntityInfo):
                 pii_list = [pii_list]
@@ -128,38 +150,50 @@ class PiiProcessor:
         return info
 
 
-    def detect_chunk(self, chunk: DocumentChunk,
-                     piic: PiiCollectionBuilder) -> int:
+    def detect_chunk(self, chunk: DocumentChunk, piic: PiiCollectionBuilder,
+                     default_lang: str = None) -> int:
         """
         Process a document chunk, calling all defined processors and performing
         PII extraction
           :param chunk: document chunk to analyze
           :param piic: collection to add the detected PII instances to
+          :param default_lang: language to use, if the chunk does not define one
         """
         self._log("... Detect chunk=%s", chunk.id, level=logging.DEBUG)
-        if self._tasks is None:
+        if not self._tasks:
             raise ProcException("no built detector tasks")
 
+        # Select the list of tasks to apply, based on the chunk language
+        lang = (chunk.context or {}).get("lang") or default_lang
+        if lang:
+            tasks = self._tasks.get(lang, [])
+        else:
+            if len(self._tasks) > 1:
+                raise InvArgException("no language chosen for tasks")
+            tasks = next(iter(self._tasks.values()))
+
+        piilist = []
         processed = set()
-        num = 0
-        for task in self._tasks:
+        for task in tasks:
 
             # See if we have already applied this task to the chunk
             if task in processed:
                 continue
             processed.add(task)
 
-            # Execute the task
+            # Execute the task, and process all detected entities
             for pii in task(chunk):
                 if "process" not in pii.fields:
                     pii.fields["process"] = {"stage": "detection"}
-                piic.add(pii, task.task_info, task.get_method(pii.info))
-
-                num += 1
+                piilist.append((pii, task.task_info, task.get_method(pii.info)))
                 self._stats["num"]["entities"] += 1
                 self._stats["entities"][pii.info.pii.name] += 1
 
-        return num
+        # Add all entities to the collection, sorted by position in chunk
+        for pii in sorted(piilist, key=lambda p: p[0].pos):
+            piic.add(*pii)
+
+        return len(piilist)
 
 
     def detect(self, doc: SrcDocument,
@@ -177,9 +211,16 @@ class PiiProcessor:
 
         self._stats["num"]["calls"] += 1
 
-        piicol = PiiCollectionBuilder(lang=self._lang, docid=doc.id)
+        meta = doc.metadata
+        lang = meta.get("main_lang") or meta.get("lang")
+        if not lang and len(self._tasks) == 1:
+            lang = next(iter(self._tasks))
+        elif not check_language(lang, self._tasks.keys()):
+            raise InvArgException("incompatible document language for extraction")
+
+        piicol = PiiCollectionBuilder(lang=lang, docid=doc.id)
         for chunk in doc.iter_full(context=chunk_context):
-            self.detect_chunk(chunk, piicol)
+            self.detect_chunk(chunk, piicol, default_lang=lang)
 
         return piicol
 
