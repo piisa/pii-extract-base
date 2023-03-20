@@ -90,7 +90,8 @@ def context_spec(spec: Union[str, List, Dict], lang=str) -> Dict:
     return out
 
 
-def context_check(text: str, context_spec: Dict, pii_pos: Tuple[int]) -> bool:
+def context_check(text: str, context_spec: Dict, pii_pos: Tuple[int],
+                  debug: bool = False) -> bool:
     """
     Try to locate any of a list of context candidate elements in a chunk of a
     text string (around a center given by the position of a PII element)
@@ -115,6 +116,9 @@ def context_check(text: str, context_spec: Dict, pii_pos: Tuple[int]) -> bool:
         if src:
             src += " "
         src += src2[:width[1]]
+
+    if debug:
+        print("TEXT:", src, "\nREGEX:", context_spec["value"])
 
     # Match
     if context_spec["regex"]:

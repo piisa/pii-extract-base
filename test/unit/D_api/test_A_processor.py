@@ -8,7 +8,7 @@ import pytest
 
 from pii_data.types import PiiEnum, PiiCollection
 from pii_data.types.doc import LocalSrcDocumentFile, DocumentChunk
-from pii_data.helper.exception import ProcException
+from pii_data.helper.exception import ProcException, InvArgException
 from pii_data.helper.config import load_config
 
 import pii_extract.gather.collector.plugin as pgmod
@@ -135,7 +135,6 @@ def test210_tasks_info():
     config = load_config(CONFIGFILE)
     pd = mod.PiiProcessor(skip_plugins=True, config=config)
     pd.build_tasks("en")
-    got = pd.task_info()
     exp = {
         (PiiEnum.CREDIT_CARD, None): [
             ('any', 'standard credit card',
@@ -147,7 +146,14 @@ def test210_tasks_info():
         ]
     }
     #print(got)
+    got = pd.task_info()
     assert exp == got
+
+    got = pd.task_info("en")
+    assert exp == got
+
+    with pytest.raises(InvArgException):
+        pd.task_info("es")
 
 
 def test220_tasks_detect(fixture_timestamp):
@@ -261,7 +267,7 @@ def test250_tasks_detect_pii_dict(fixture_timestamp):
     assert exp == pii[1].asdict()
 
 
-def test260_tasks_detect_chunk(fixture_timestamp):
+def test300_tasks_detect_chunk(fixture_timestamp):
     """
     Test running a detection on a chunk
     """
@@ -305,16 +311,84 @@ def test260_tasks_detect_chunk(fixture_timestamp):
             'country': 'any',
             'start': 82,
             'end': 94
-        },
+        }
     ]
 
     got = [p.asdict() for p in piic]
     assert exp == got
 
 
-def test270_tasks_stats(fixture_timestamp):
+def test310_tasks_detect_chunk_multi(fixture_timestamp):
     """
-    Test building a PiiTask
+    Test running a detection on a chunk, multilang
+    """
+    exp = [
+        {
+            'detector': 1,
+            'process': {
+                'stage': 'detection'
+            },
+            'type': 'CREDIT_CARD',
+            'subtype': 'standard credit card',
+            'value': '4273 9666 4581 5642',
+            'chunkid': '0',
+            'lang': 'any',
+            'start': 33,
+            'end': 52
+        },
+        {
+            'detector': 2,
+            'process': {
+                'stage': 'detection'
+            },
+            'type': 'PHONE_NUMBER',
+            'subtype': 'international phone number',
+            'value': '+34983453999',
+            'chunkid': '0',
+            'lang': 'en',
+            'country': 'any',
+            'start': 82,
+            'end': 94
+        }
+    ]
+
+    config = load_config(CONFIGFILE)
+    pd = mod.PiiProcessor(skip_plugins=True, config=config)
+
+    SRC = """My current credit card number is 4273 9666 4581 5642 and my phone
+      number is +34983453999. This other one, however, is not a valid credit
+      card number: 9999 9666 4581 5643"""
+
+    # Build for EN
+    pd.build_tasks(lang="en")
+
+    # Detect in an EN chunk
+    chunk = DocumentChunk(id=0, data=SRC, context={"lang": "en"})
+    piic = mod.PiiCollectionBuilder()
+    n = pd.detect_chunk(chunk, piic)
+    assert n == 2
+    got = [p.asdict() for p in piic]
+    assert exp == got
+
+    # Detect in an ES chunk -- no tasks found, hence nothing detected
+    chunk = DocumentChunk(id=0, data=SRC, context={"lang": "es"})
+    piic = mod.PiiCollectionBuilder()
+    n = pd.detect_chunk(chunk, piic)
+    assert n == 0
+
+    # Build for ES
+    pd.build_tasks(lang="es")
+
+    # Now detect again in an ES chunk -- this time we do get results
+    n = pd.detect_chunk(chunk, piic)
+    assert n == 1
+    got = [p.asdict() for p in piic]
+    assert exp[:1] == got
+
+
+def test400_tasks_stats(fixture_timestamp):
+    """
+    Test fetching stats
     """
 
     config = load_config(CONFIGFILE)

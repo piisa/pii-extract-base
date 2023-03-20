@@ -22,6 +22,7 @@ from pii_data.helper.exception import ProcException
 from ...defs import FMT_CONFIG_PLUGIN
 from ..parser import RawTaskDefaults
 from ...helper.types import TYPE_STR_LIST
+from ...helper.logger import PiiLogger
 from .base import BaseTaskCollector
 from .defs import PII_EXTRACT_PLUGIN_ID
 
@@ -41,6 +42,7 @@ class PluginTaskCollector(BaseTaskCollector):
         super().__init__(debug=debug)
         self._tasks = None
         self._plugins = []
+        self._log = PiiLogger(__name__, debug)
 
         # Configuration for plugins
         plugin_cfg = config.get(FMT_CONFIG_PLUGIN, {}) if config else {}
@@ -73,6 +75,8 @@ class PluginTaskCollector(BaseTaskCollector):
                 'object': plugin
             }
             self._plugins.append(desc)
+            self._log(". loaded plugin: %s version=%s source=%s",
+                      desc["name"], desc["version"], desc["source"])
 
 
     def __repr__(self) -> str:

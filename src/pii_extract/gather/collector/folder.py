@@ -4,6 +4,7 @@ Build lists of PiiTask specifications by traversing folders
 
 import importlib
 from pathlib import Path
+from itertools import chain
 
 from typing import Dict, List, Iterable
 
@@ -40,6 +41,19 @@ def mod_subdir(basedir: str) -> List[str]:
                       and d.name != "__pycache__")
     except FileNotFoundError:
         return []
+
+
+def task_subtype(task: Dict) -> str:
+    """
+    Return a string deifning the task subtype, if possible
+    """
+    sub = (p.get("subtype") for p in task["pii"])
+    sub = ([s] if isinstance(s, str) else s for s in filter(None, sub))
+    sub = "/".join(chain.from_iterable(sub))
+    if sub is None:
+        sub = task.get("name")
+    return f"({sub})" if sub else ""
+
 
 
 # --------------------------------------------------------------------------
@@ -125,12 +139,12 @@ class FolderTaskCollector(BaseTaskCollector):
                 if self._pii_filter and not (pii & self._pii_filter):
                     continue
                 yield task
+                num += 1
 
                 if self._debug:
                     pii = ",".join(p.name for p in sorted(pii))
-                    self._log("   %s -> (%s) %s", pii,
-                              task[FIELD_CLASS], task.get("name"))
-                num += 1
+                    self._log("     %s %s -> %s", pii, task_subtype(task),
+                              task[FIELD_CLASS])
 
         if num == 0:
             self._log("... NO PII TASKS for %s", pkg)

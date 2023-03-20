@@ -46,14 +46,17 @@ def piid_ok(piid: Dict, lang: Set[str], country: Set[str],
     """
     Decide if a PII descriptor agrees with a language/country filter
     """
+    if pii and not pii & taskd_field(piid, "pii"):
+        return False
+
     if lang and not lang & taskd_field(piid, "lang"):
         return False
 
-    if country and not country & taskd_field(piid, "country"):
-        return False
-
-    if pii and not pii & taskd_field(piid, "pii"):
-        return False
+    # Country is different: the task descriptor may not have it
+    if country:
+        task_country = taskd_field(piid, "country")
+        if task_country and not country & task_country:
+            return False
 
     return True
 
@@ -85,21 +88,28 @@ class PiiTaskCollection:
     def __init__(self):
         """
         """
-        self._tasks = []
+        self._task_dsc = []
+        self._task_obj = {}
         self._lang = None
         self._countries = None
-        self._num = 0
 
 
     def __repr__(self) -> str:
-        return f"<PiiTaskCollection #{self._num}>"
+        return f"<PiiTaskCollection #{len(self)}>"
 
 
     def __len__(self) -> int:
         """
-        Return the number of gathered tasks
+        Return the number of gathered tasks descriptors
         """
-        return self._num
+        return len(self._task_dsc)
+
+
+    def num(self, built: bool = False) -> int:
+        """
+        Return the number of tasks, either gathered or built
+        """
+        return len(self._task_obj if built else self._task_dsc)
 
 
     def add_collector(self, tc: BaseTaskCollector) -> int:
@@ -110,28 +120,27 @@ class PiiTaskCollection:
         self._lang = self._countries = None
         num = 0
         for num, taskd in enumerate(tc.gather_tasks(), start=1):
-            self._tasks.append(parse_task_descriptor(taskd))
-        self._num += num
+            self._task_dsc.append(parse_task_descriptor(taskd))
         return num
 
 
     def language_list(self) -> List[str]:
         """
-        Return all languages with defined tasks
+        Return all languages that have task descriptors
         """
         if self._lang is None:
             self._lang = union_sets(taskd_field(t["piid"], "lang")
-                                    for t in self._tasks)
+                                    for t in self._task_dsc)
         return self._lang
 
 
     def country_list(self) -> List[str]:
         """
-        Return all languages with defined tasks
+        Return all countries that have task descriptors
         """
         if self._countries is None:
             self._countries = union_sets(taskd_field(t["piid"], "country")
-                                         for t in self._tasks)
+                                         for t in self._task_dsc)
         return self._countries
 
 
@@ -139,7 +148,7 @@ class PiiTaskCollection:
                      country: Iterable[str] = None, pii: TYPE_TASKENUM = None,
                      add_any: bool = True) -> Iterable[Dict]:
         """
-        Return specific task(s) for a given language., PII type(s) & countries
+        Return specific task(s) for a given language, PII type(s) & countries
 
         Try to find the most specific task available, using the specs:
           :param lang: language to search, if not specified search tasks for all
@@ -150,7 +159,7 @@ class PiiTaskCollection:
           :param add_any: if False,
               - do not add "any" lang tasks, except if explicitly requested
               - do not add "any" country tasks, unless explicitly requested or
-                all languages requested
+                all languages have been requested
           :return: an iterable of task definitions
         """
         # Consolidate filters
@@ -164,8 +173,8 @@ class PiiTaskCollection:
                 country.add(COUNTRY_ANY)
         pii = set(ensure_enum_list(pii)) if pii is not None else None
 
-        # Traverse the task list and apply the filters
-        for taskd in self._tasks:
+        # Traverse the list of task descriptors and apply the filters
+        for taskd in self._task_dsc:
 
             # If no lang/country filter, we're done
             if not lang and not country and not pii:
@@ -195,9 +204,22 @@ class PiiTaskCollection:
         # Build and return them
         built = set()
         for td in tasklist:
-            if td["obj"]["task"] in built:
-                continue  # we don't build the same task twice
-            task = build_task(td)
+
+            # See if we have already been ask to build this task in this call
+            objid = td["obj"]["task"]
+            if objid in built:
+                continue  # we don't deliver the same task twice
+
+            # Fetch it from the cache of built tasks or build it
+            obj = self._task_obj.get(objid)
+            if obj:
+                task = obj
+            else:
+                task = build_task(td)
+                self._task_obj[objid] = task
+                #print("ADD", objid)
+
+            # Deliver it
             if task:
-                built.add(td["obj"]["task"])
+                built.add(objid)
                 yield task
