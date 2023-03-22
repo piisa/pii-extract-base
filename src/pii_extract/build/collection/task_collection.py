@@ -1,10 +1,10 @@
 """
 Build collections of tasks
 """
-
 from typing import Dict, List, Iterable, Union, Set
 
 from pii_data.helper.exception import InvArgException
+from pii_data.helper.logger import PiiLogger
 from pii_data.types import PiiEnum
 
 from ...defs import LANG_ANY, COUNTRY_ANY
@@ -85,13 +85,14 @@ class PiiTaskCollection:
     instantiated into task objects
     """
 
-    def __init__(self):
+    def __init__(self, debug: bool = False):
         """
         """
         self._task_dsc = []
-        self._task_obj = {}
         self._lang = None
         self._countries = None
+        self._log = PiiLogger(__name__, debug)
+        self._num = 0
 
 
     def __repr__(self) -> str:
@@ -109,7 +110,7 @@ class PiiTaskCollection:
         """
         Return the number of tasks, either gathered or built
         """
-        return len(self._task_obj if built else self._task_dsc)
+        return self._num if built else len(self._task_dsc)
 
 
     def add_collector(self, tc: BaseTaskCollector) -> int:
@@ -117,7 +118,11 @@ class PiiTaskCollection:
         Fetch all raw tasks descriptors gathered by a task collector,
         convert them to task definitions and add them to the list
         """
+        # Reset list of languages/countries so that they will be computed again
         self._lang = self._countries = None
+
+        # Append all tasks gathered by the collector
+        self._log(". gather-tasks from: %s", tc)
         num = 0
         for num, taskd in enumerate(tc.gather_tasks(), start=1):
             self._task_dsc.append(parse_task_descriptor(taskd))
@@ -210,16 +215,12 @@ class PiiTaskCollection:
             if objid in built:
                 continue  # we don't deliver the same task twice
 
-            # Fetch it from the cache of built tasks or build it
-            obj = self._task_obj.get(objid)
-            if obj:
-                task = obj
-            else:
-                task = build_task(td)
-                self._task_obj[objid] = task
-                #print("ADD", objid)
+            # Build it
+            task = build_task(td)
 
             # Deliver it
             if task:
                 built.add(objid)
                 yield task
+
+        self._num += len(built)

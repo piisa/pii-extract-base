@@ -1,5 +1,13 @@
 # ChangeLog
 
+## 0.3.1
+ * removed cache of built tasks: now they are rebuilt again if included
+   in lists (each task decides if it caches something)
+ * fixed regex group detection (when there are initial unmatched groups)
+ * fix: do not expand the language list in BaseTaskCollector.gather_tasks()
+   (would cause to execute the gather process twice)
+ * added more logging lines
+
 ## 0.3.0
  * TaskCollection can build several task lists, for different languages
     - tasks already built for other languages are reused

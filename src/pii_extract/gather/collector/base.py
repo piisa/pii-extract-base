@@ -2,15 +2,13 @@
 Base class to create TaskCollector objects
 """
 
-import sys
-
 from typing import Dict, List, Iterable
 
 from pii_data.helper.exception import UnimplementedException
+from pii_data.helper.logger import PiiLogger
 
 from ...helper.types import TYPE_STR_LIST
 from ...helper.utils import union_sets, taskd_field
-from ...helper.logger import PiiLogger
 
 
 
@@ -94,9 +92,7 @@ class BaseTaskCollector:
          :param lang: list of languages for which tasks are searched for. If
            not passed, all available languages will be gathered
         """
-        if lang is None:
-            lang = self.language_list()
-        elif isinstance(lang, str):
+        if isinstance(lang, str):
             lang = [lang]
         self._log(". gather-tasks lang=%s", lang)
 

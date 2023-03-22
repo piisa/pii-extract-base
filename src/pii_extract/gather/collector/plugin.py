@@ -22,7 +22,6 @@ from pii_data.helper.exception import ProcException
 from ...defs import FMT_CONFIG_PLUGIN
 from ..parser import RawTaskDefaults
 from ...helper.types import TYPE_STR_LIST
-from ...helper.logger import PiiLogger
 from .base import BaseTaskCollector
 from .defs import PII_EXTRACT_PLUGIN_ID
 
@@ -36,13 +35,12 @@ class PluginTaskCollector(BaseTaskCollector):
         """
         Check available plugins and create an instance
          :param config: a dictionary possibly containing:
-            (a) configuration for the collector (options for plugin loaders
+            (a) configuration for the collector (options for plugin loaders)
             (b) configuration to pass to each loader class
         """
         super().__init__(debug=debug)
         self._tasks = None
         self._plugins = []
-        self._log = PiiLogger(__name__, debug)
 
         # Configuration for plugins
         plugin_cfg = config.get(FMT_CONFIG_PLUGIN, {}) if config else {}
@@ -101,6 +99,7 @@ class PluginTaskCollector(BaseTaskCollector):
         tasks = []
         reformat = RawTaskDefaults(normalize=True)
         for plugin in self._plugins:
+            self._log(". gather plugin tasks for: %s", plugin["name"])
             raw_tasks = plugin["object"].get_plugin_tasks(lang)
             tasks += list(reformat(raw_tasks))
 

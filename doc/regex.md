@@ -15,8 +15,8 @@
 * It is usually convenient to try to define regex boundaries, e.g. by framing
   it with `\b` (when appropriate) or by using lookahead or lookbehind 
   assertions, positive or negative (e.g. `(?=...)`, `(?<=...)`, etc)
-* The regex must have either no capturing groups (the whole match will be
-  considered as the PII value) or a single one (which will be the PII value)
+* The regex must either produce no capturing groups (then the whole match will
+  be considered as the PII value) or a single one (which will be the PII value)
 * The pattern will be compiled with the [re.VERBOSE] (aka `re.X`) flag, so
   take that into account (in particular, **whitespace is ignored**, so if it is
   part of the regular expression needs to included as a category i.e. `\s`, or
