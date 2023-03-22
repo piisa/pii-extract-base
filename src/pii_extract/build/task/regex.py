@@ -34,6 +34,6 @@ class RegexPiiTask(BasePiiTask):
         """
         defaults = self.get_pii_defaults()
         for cc in self.regex.finditer(chunk.data):
-            g = 1 if cc.lastindex is not None else 0
+            g = cc.lastindex or 0
             yield PiiEntity(self.pii_info, cc.group(g), chunk.id, cc.start(g),
                             **defaults)
