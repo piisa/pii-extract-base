@@ -12,7 +12,7 @@ from .base import BasePiiTask
 
 class CallablePiiTask(BasePiiTask):
     """
-    A wrapper for a PII implemented as a function
+    A wrapper for a PII detector implemented as a function.
     Since it inherits from BasePiiTask, it will automatically apply context
     validation to the function results, if a suitable context argument is added
     """

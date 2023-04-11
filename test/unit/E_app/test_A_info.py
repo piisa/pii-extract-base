@@ -41,5 +41,5 @@ def test100_app_info(capfd):
         mod.main(args)
 
     captured = capfd.readouterr()
-    #print(captured.out)
+    #print("*** CAPTURED", captured.out, sep="\n")
     assert captured.out == INFO

@@ -1,5 +1,5 @@
 """
-Build lists of PiiTask specifications by traversing folders
+Build lists of PiiTask descriptors by traversing folders
 """
 
 import importlib
@@ -10,12 +10,13 @@ from typing import Dict, List, Iterable
 
 from pii_data.types import PiiEnum
 from pii_data.helper.exception import ConfigException
-from ...defs import LANG_ANY, COUNTRY_ANY
-from ...helper.utils import union_sets
-from ..parser import RawTaskDefaults
-from ..parser.defs import FIELD_CLASS
-from ..parser.parser import piienum
+
+from pii_extract.defs import LANG_ANY, COUNTRY_ANY
+from pii_extract.helper.utils import union_sets
+from pii_extract.gather.parser.defs import FIELD_CLASS
+from pii_extract.gather.parser.parser import piienum
 from .base import BaseTaskCollector
+from .utils import RawTaskDefaults
 
 # For folder defs: name of the Python list holding pii tasks inside a module
 _LISTNAME = "PII_TASKS"

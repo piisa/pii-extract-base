@@ -8,7 +8,7 @@ from pii_data.types import PiiEnum
 from pii_extract.defs import LANG_ANY, COUNTRY_ANY
 from pii_extract.build.task import BasePiiTask, CallablePiiTask, RegexPiiTask
 
-import pii_extract.build.collection.task_collection as mod
+import pii_extract.gather.collection.task_collection as mod
 
 from taux.task_collector_example import MyTestTaskCollector
 import taux.examples_task_descriptor_full as TASKD

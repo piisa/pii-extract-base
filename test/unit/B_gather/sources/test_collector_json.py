@@ -7,7 +7,7 @@ import json
 
 from pii_extract.defs import LANG_ANY
 
-import pii_extract.gather.collector.json as mod
+import pii_extract.gather.collection.sources.json as mod
 
 
 _TASKFILE = Path(__file__).parents[3] / "data" / "tasklist-example.json"

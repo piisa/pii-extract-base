@@ -1,5 +1,5 @@
 """
-Define the BaseMultiPiiTask base class
+Define the BaseMultiPiiTask base subclass
 """
 
 from typing import Union, Dict, List, Iterable

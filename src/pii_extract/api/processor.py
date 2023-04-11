@@ -1,5 +1,5 @@
 """
-Definition of the main PiiProcessor object: a class that 
+Definition of the main PiiProcessor object: a class that
  * creates a PiiTaskCollection and fills it with tasks definitions
  * uses it to build task objects
  * and applies the objects to documents
@@ -17,9 +17,9 @@ from pii_data.types.doc import SrcDocument, DocumentChunk
 from pii_data.helper.exception import ProcException, InvArgException
 
 from ..helper.logger import PiiLogger
-from ..gather.collector import JsonTaskCollector
 from ..build.task import PiiTaskInfo
-from ..build.collection import get_task_collection, TYPE_TASKENUM
+from ..gather.collection import get_task_collection, TYPE_TASKENUM
+from ..gather.collection.sources import JsonTaskCollector
 
 
 
@@ -41,22 +41,41 @@ def check_language(lang1: TYPE_LANG, lang2: TYPE_LANG) -> bool:
 
 class PiiCollectionBuilder(PiiCollection):
     """
-    A small varianto of the PiiCollection class, in which the add() method
-    accepts a PiiTaskInfo object instead of a PiiDetector, and builds it
+    A small variant of the PiiCollection class, with a couple of additional
+    convenience methods to add PiiEntity instances
+      - add_detector_fields(), which accepts a PiiTaskInfo object instead of a
+        PiiDetector, and builds the PiiDetector
+      - add_collection(), which adds all pii in a collection to another
     """
 
-    def add(self, pii: PiiEntity, info: Union[PiiTaskInfo, Dict], method: str):
+    def add_detector_fields(self, pii: PiiEntity,
+                            info: Union[PiiTaskInfo, Dict], method: str = None):
         """
+        Add a detector, given its fields
          :param pii: the detected Pii entity
          :param info: a PiiTaskInfo (or equivalent dict) for the task that
            did the detection
+         :param method: task detector method, if not found in `info`
         """
         if isinstance(info, PiiTaskInfo):
             info = info.asdict()
-        kwargs = {k: info.get(k) for k in ("source", "name", "version")}
-        detector = PiiDetector(**kwargs, method=method)
+        kwargs = {k: info.get(k)
+                  for k in ("source", "name", "version", "method")}
+        if method:
+            kwargs["method"] = method
+        detector = PiiDetector(**kwargs)
         super().add(pii, detector)
 
+
+    def add_collection(self, piic: PiiCollection) -> int:
+        """
+        Add all PiiEntity instances in a collection to another.
+        If needed, add also the detectors
+        """
+        num = 0
+        for num, pii in enumerate(piic, start=1):
+            self.add(pii, piic.get_detector(pii.fields["detector"]))
+        return num
 
 
 # --------------------------------------------------------------------------
@@ -169,7 +188,7 @@ class PiiProcessor:
             tasks = self._tasks.get(lang, [])
         else:
             if len(self._tasks) > 1:
-                raise InvArgException("no language chosen for tasks")
+                raise InvArgException("must select a language for tasks")
             tasks = next(iter(self._tasks.values()))
 
         piilist = []
@@ -191,7 +210,7 @@ class PiiProcessor:
 
         # Add all entities to the collection, sorted by position in chunk
         for pii in sorted(piilist, key=lambda p: p[0].pos):
-            piic.add(*pii)
+            piic.add_detector_fields(*pii)
 
         return len(piilist)
 

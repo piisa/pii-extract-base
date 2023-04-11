@@ -1,6 +1,6 @@
 """
 A task collector that searches for Python entry points that correspond to
-pii-extract plugins
+pii-extract plugins, providing lists of PiiTask descriptors
 
 A plugin must have 
   * an entry point of group PII_EXTRACT_PLUGIN_ID
@@ -19,9 +19,9 @@ from typing import Dict, List, Iterable
 
 from pii_data.helper.exception import ProcException
 
-from ...defs import FMT_CONFIG_PLUGIN
-from ..parser import RawTaskDefaults
-from ...helper.types import TYPE_STR_LIST
+from pii_extract.defs import FMT_CONFIG_PLUGIN
+from pii_extract.helper.types import TYPE_STR_LIST
+from .utils import RawTaskDefaults
 from .base import BaseTaskCollector
 from .defs import PII_EXTRACT_PLUGIN_ID
 

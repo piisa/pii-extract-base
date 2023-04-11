@@ -1,2 +1,1 @@
-from .utils import normalize_rawtaskd, RawTaskDefaults
-from .parser import parse_task_descriptor
+from .parser import parse_task_descriptor               # noqa: F401

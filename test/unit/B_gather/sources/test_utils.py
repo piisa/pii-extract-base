@@ -5,9 +5,8 @@ Test the base task processing options in taskdict
 import pytest
 
 from pii_data.types import PiiEnum
-from pii_extract.defs import COUNTRY_ANY
 
-import pii_extract.gather.parser.utils as mod
+import pii_extract.gather.collection.sources.utils as mod
 
 
 _SRC = [

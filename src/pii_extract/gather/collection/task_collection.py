@@ -1,94 +1,31 @@
 """
-Build collections of tasks
+Build collections of task definitions
 """
-from typing import Dict, List, Iterable, Union, Set
 
-from pii_data.helper.exception import InvArgException
+from typing import Dict, List, Iterable
+
 from pii_data.helper.logger import PiiLogger
-from pii_data.types import PiiEnum
 
 from ...defs import LANG_ANY, COUNTRY_ANY
-from ...gather.collector.base import BaseTaskCollector
-from ...gather.parser import parse_task_descriptor
 from ...helper.utils import field_set, taskd_field, union_sets
-from ..task import BasePiiTask
-from ..build import build_task
+from ...build.task import BasePiiTask
+from ...build import build_task
+from ..parser import parse_task_descriptor
+from .sources.base import BaseTaskCollector
+from .utils import ensure_enum_list, filter_piid, TYPE_TASKENUM
 
-
-TYPE_TASKENUM = Union[PiiEnum, List[PiiEnum], str, List[str]]
-TYPE_PIID = Union[Dict, List[Dict]]
-
-# --------------------------------------------------------------------------
-
-
-def ensure_enum(pii: Union[str, PiiEnum]) -> PiiEnum:
-    """
-    Ensure a task specification is a PiiEnum
-    """
-    try:
-        return pii if isinstance(pii, PiiEnum) else PiiEnum[str(pii).upper()]
-    except KeyError:
-        raise InvArgException("unknown pii type: {}", pii)
-
-
-def ensure_enum_list(pii: TYPE_TASKENUM) -> List[PiiEnum]:
-    """
-    Ensure a task specification is a list of PiiEnum
-    """
-    if isinstance(pii, (list, tuple)):
-        return [ensure_enum(t) for t in pii]
-    else:
-        return [ensure_enum(pii)]
-
-
-def piid_ok(piid: Dict, lang: Set[str], country: Set[str],
-            pii: Set[PiiEnum]) -> bool:
-    """
-    Decide if a PII descriptor agrees with a language/country filter
-    """
-    if pii and not pii & taskd_field(piid, "pii"):
-        return False
-
-    if lang and not lang & taskd_field(piid, "lang"):
-        return False
-
-    # Country is different: the task descriptor may not have it
-    if country:
-        task_country = taskd_field(piid, "country")
-        if task_country and not country & task_country:
-            return False
-
-    return True
-
-
-def filter_piid(piid: TYPE_PIID, lang: Set[str], country: Set[str] = None,
-                pii: Set[PiiEnum] = None) -> TYPE_PIID:
-    """
-    Select from a (possibly multiple) PII descriptor the items that agree with
-    a PiiEnum/language/country filter
-    """
-    if not lang and not country and not pii:
-        return piid
-
-    if isinstance(piid, dict):
-        return piid if piid_ok(piid, lang, country, pii) else None
-    else:
-        return [p for p in piid if piid_ok(p, lang, country, pii)]
-
-
-# --------------------------------------------------------------------------
 
 
 class PiiTaskCollection:
     """
-    The object holding the set of task descriptors, which can then be
+    An object holding a set of task definitions, which can then be
     instantiated into task objects
     """
 
     def __init__(self, debug: bool = False):
         """
         """
-        self._task_dsc = []
+        self.task_def = []
         self._lang = None
         self._countries = None
         self._log = PiiLogger(__name__, debug)
@@ -101,22 +38,24 @@ class PiiTaskCollection:
 
     def __len__(self) -> int:
         """
-        Return the number of gathered tasks descriptors
+        Return the number of gathered tasks definitions
         """
-        return len(self._task_dsc)
+        return len(self.task_def)
 
 
     def num(self, built: bool = False) -> int:
         """
-        Return the number of tasks, either gathered or built
+        Return the number of tasks, either
+          - the number available task definitions
+          - the number of built task objects
         """
-        return self._num if built else len(self._task_dsc)
+        return self._num if built else len(self.task_def)
 
 
     def add_collector(self, tc: BaseTaskCollector) -> int:
         """
         Fetch all raw tasks descriptors gathered by a task collector,
-        convert them to task definitions and add them to the list
+        convert them to task definitions and add them to the object list
         """
         # Reset list of languages/countries so that they will be computed again
         self._lang = self._countries = None
@@ -125,17 +64,17 @@ class PiiTaskCollection:
         self._log(". gather-tasks from: %s", tc)
         num = 0
         for num, taskd in enumerate(tc.gather_tasks(), start=1):
-            self._task_dsc.append(parse_task_descriptor(taskd))
+            self.task_def.append(parse_task_descriptor(taskd))
         return num
 
 
     def language_list(self) -> List[str]:
         """
-        Return all languages that have task descriptors
+        Return all languages that have task definitions
         """
         if self._lang is None:
             self._lang = union_sets(taskd_field(t["piid"], "lang")
-                                    for t in self._task_dsc)
+                                    for t in self.task_def)
         return self._lang
 
 
@@ -145,7 +84,7 @@ class PiiTaskCollection:
         """
         if self._countries is None:
             self._countries = union_sets(taskd_field(t["piid"], "country")
-                                         for t in self._task_dsc)
+                                         for t in self.task_def)
         return self._countries
 
 
@@ -178,8 +117,8 @@ class PiiTaskCollection:
                 country.add(COUNTRY_ANY)
         pii = set(ensure_enum_list(pii)) if pii is not None else None
 
-        # Traverse the list of task descriptors and apply the filters
-        for taskd in self._task_dsc:
+        # Traverse the list of task definitions and apply the filters
+        for taskd in self.task_def:
 
             # If no lang/country filter, we're done
             if not lang and not country and not pii:
@@ -201,7 +140,13 @@ class PiiTaskCollection:
                     add_any: bool = True) -> Iterable[BasePiiTask]:
         """
         Build a list of tasks from their definitions stored in the collection.
-        Return the list of built task objects.
+          :param lang: select tasks to build for these languages
+          :param country: select tasks to build for these countries
+          :param country: select tasks to build for these PII types
+          :param add_any: when restricting language/country, add also language-
+             and country-independent tasks
+          :return: an iterable yielding the built task objects.
+
         """
         # Get the list of tasks to build
         tasklist = self.taskdef_list(lang, country, pii=pii, add_any=add_any)

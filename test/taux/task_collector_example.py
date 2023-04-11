@@ -1,7 +1,7 @@
 
 from pathlib import Path
 
-from pii_extract.gather.collector import FolderTaskCollector
+from pii_extract.gather.collection.sources import FolderTaskCollector
 
 
 class MyTestTaskCollector(FolderTaskCollector):

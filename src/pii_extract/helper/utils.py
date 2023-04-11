@@ -18,15 +18,16 @@ def field_set(value: Union[str, Iterable[str], None]) -> Set[str]:
     """
     Return a (possibly multiple) field as a set of values
     """
-    return set([value] if isinstance(value, str) else value) if value else set()
+    return set([value] if isinstance(value, (int, str))
+               else value) if value else set()
 
 
-def taskd_field(taskd: Dict, field: str = "lang") -> Set[str]:
+def taskd_field(taskd: Union[Dict, Iterable[Dict]],
+                field: str = "lang") -> Set[str]:
     """
-    Get the a field from a descriptor dictionary
-     :param taskd: the task descriptor dictionary
+    Get the a field from a descriptor dictionary as a set of values
+     :param taskd: the task descriptor dictionary (or list of dictionaries)
      :param field: the field to fetch
-     :param as_set: return it as a set of values
      :return: a set of field values
     """
     if isinstance(taskd, dict):

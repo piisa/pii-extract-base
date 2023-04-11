@@ -6,14 +6,14 @@ from pathlib import Path
 from unittest.mock import Mock
 import pytest
 
-from pii_data.types import PiiEnum, PiiCollection
+from pii_data.types import PiiEnum, PiiCollection, PiiEntity
 from pii_data.types.doc import LocalSrcDocumentFile, DocumentChunk
 from pii_data.helper.exception import ProcException, InvArgException
 from pii_data.helper.config import load_config
 
-import pii_extract.gather.collector.plugin as pgmod
-import pii_extract.api.processor as mod
+from pii_extract.build.task import PiiTaskInfo
 import pii_extract.defs as defs
+import pii_extract.api.processor as mod
 
 from taux import auxpatch
 
@@ -112,6 +112,94 @@ def test150_task_info():
     with pytest.raises(ProcException) as excinfo:
         pd.task_info()
     assert "no detector tasks have been built" == str(excinfo.value)
+
+
+def test160_collectionbuilder():
+    """
+    Test PiiCollectionBuilder
+    """
+    pc1 = mod.PiiCollectionBuilder(lang="en")
+
+    tinfo = PiiTaskInfo("unit test", "example", "0.0.1")
+    ent = PiiEntity.build(PiiEnum.CREDIT_CARD, "0101", "1", 23)
+    pc1.add_detector_fields(ent, tinfo, "blurb1")
+    ent = PiiEntity.build(PiiEnum.PHONE_NUMBER, "1234", "1", 23)
+    pc1.add_detector_fields(ent, tinfo, "blurb2")
+
+    assert len(pc1) == 2
+    ent = list(pc1)[0]
+    assert ent.fields["detector"] == 1
+    det = pc1.get_detector(1)
+    assert det.fields["name"] == "example"
+    assert det.fields["method"] == "blurb1"
+
+
+def test161_collectionbuilder():
+    """
+    Test PiiCollectionBuilder
+    """
+    pc1 = mod.PiiCollectionBuilder(lang="en")
+
+    tinfo = PiiTaskInfo("unit test", "example", "0.0.1")
+    ent = PiiEntity.build(PiiEnum.CREDIT_CARD, "0101", "1", 23)
+    pc1.add_detector_fields(ent, tinfo, "blurb1")
+    ent = PiiEntity.build(PiiEnum.PHONE_NUMBER, "1234", "1", 23)
+    pc1.add_detector_fields(ent, tinfo, "blurb2")
+
+    pc2 = mod.PiiCollectionBuilder(lang="en")
+    tinfo = PiiTaskInfo("unit test", "example2", "0.1.0")
+    ent = PiiEntity.build(PiiEnum.CREDIT_CARD, "0101", "1", 23)
+    pc2.add_detector_fields(ent, tinfo, "blurb1")
+    ent = PiiEntity.build(PiiEnum.PHONE_NUMBER, "1234", "1", 23)
+    pc2.add_detector_fields(ent, tinfo, "blurb2")
+
+    pc1.add_collection(pc2)
+
+    assert len(pc1) == 4
+    ent = list(pc1)[3]
+    assert ent.fields["detector"] == 2
+    det = pc1.get_detector(1)
+    assert det.fields["name"] == "example"
+    assert det.fields["method"] == "blurb1"
+
+
+def test162_collectionbuilder_clone():
+    """
+    Test PiiCollectionBuilder cloning
+    """
+    pc1 = mod.PiiCollectionBuilder(lang="en")
+
+    # Add one PII, one detector
+    tinfo = PiiTaskInfo("unit test", "example1", "0.0.1")
+    ent = PiiEntity.build(PiiEnum.CREDIT_CARD, "0101", "1", 23)
+    pc1.add_detector_fields(ent, tinfo, "blurb1")
+
+    # Add 2nd PII, 2nd detector
+    tinfo = PiiTaskInfo("unit test", "example2", "0.0.1")
+    ent = PiiEntity.build(PiiEnum.PHONE_NUMBER, "1234", "1", 23)
+    pc1.add_detector_fields(ent, tinfo, "blurb2")
+
+    # Clone into a new one (keeping detectors)
+    pc2 = mod.PiiCollectionBuilder.clone(pc1)
+    assert len(pc2.get_detectors()) == 2
+
+    # Add 3rd PII, reusing the last detector
+    ent = PiiEntity.build(PiiEnum.CREDIT_CARD, "0101", "1", 23)
+    pc2.add_detector_fields(ent, tinfo, "blurb2")
+
+    # Add 4th PII, with a new detector
+    tinfo = PiiTaskInfo("unit test", "example3", "0.1.0")
+    ent = PiiEntity.build(PiiEnum.PHONE_NUMBER, "1234", "1", 23)
+    pc2.add_detector_fields(ent, tinfo, "blurb3")
+
+    assert len(pc2) == 2
+    assert len(pc2.get_detectors()) == 3
+
+    # Add PIIC objects. Should not increment the number of detectors
+    pc2.add_collection(pc1)
+
+    assert len(pc2) == 4
+    assert len(pc2.get_detectors()) == 3
 
 
 def test200_build_tasks():

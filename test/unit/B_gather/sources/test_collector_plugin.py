@@ -7,7 +7,7 @@ import pytest
 from pii_data.types import PiiEnum
 from pii_extract.defs import LANG_ANY
 
-import pii_extract.gather.collector.plugin as mod
+import pii_extract.gather.collection.sources.plugin as mod
 
 from taux import auxpatch
 

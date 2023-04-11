@@ -11,8 +11,8 @@ from unittest.mock import Mock
 from pii_data.types.piicollection import collection
 from pii_data.types.doc import document
 
-from pii_extract.gather.collector.defs import PII_EXTRACT_PLUGIN_ID
-import pii_extract.gather.collector.plugin as plugin_mod
+from pii_extract.gather.collection.sources.defs import PII_EXTRACT_PLUGIN_ID
+import pii_extract.gather.collection.sources.plugin as plugin_mod
 
 import taux.examples_task_descriptor_raw as RAW
 
@@ -54,7 +54,6 @@ class PluginMock:
         return iter([RAW.TASK_PHONE_NUMBER, RAW.TASK_GOVID, RAW.TASK_CREDIT_CARD])
 
 
-    
 def patch_entry_points(monkeypatch):
     """
     Monkey-patch the the importlib.metadata.entry_points call to return

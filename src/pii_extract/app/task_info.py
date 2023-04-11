@@ -12,7 +12,7 @@ from typing import List, TextIO
 from pii_data.helper.config import load_config
 
 from .. import VERSION
-from ..gather.collector import PluginTaskCollector
+from ..gather.collection.sources import PluginTaskCollector
 from ..api import PiiProcessor
 from ..api.file import print_tasks
 

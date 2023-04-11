@@ -7,7 +7,7 @@ from typing import Dict
 from pii_data.helper.logger import PiiLogger
 
 from ...defs import FMT_CONFIG_TASKS
-from ...gather.collector import PluginTaskCollector, JsonTaskCollector
+from .sources import PluginTaskCollector, JsonTaskCollector
 from .task_collection import PiiTaskCollection
 
 
