@@ -1,5 +1,5 @@
 """
-Build lists of PiiTask specifications by reading a JSON definition
+Build lists of PiiTask descriptors by reading a JSON definition
 """
 
 from typing import Dict, Iterable, Union
@@ -8,10 +8,10 @@ from pii_data.helper.exception import InvArgException, ConfigException
 from pii_data.helper.config import load_config, TYPE_CONFIG
 from pii_data.defs import FMT_CONFIG_PREFIX
 
-from ...defs import FMT_CONFIG_TASKS
-from ...helper.types import TYPE_STR_LIST
-from ...helper.utils import taskd_field, field_set
-from ..parser import RawTaskDefaults
+from pii_extract.defs import FMT_CONFIG_TASKS
+from pii_extract.helper.types import TYPE_STR_LIST
+from pii_extract.helper.utils import taskd_field, field_set
+from .utils import RawTaskDefaults
 from .base import BaseTaskCollector
 
 

@@ -2,11 +2,18 @@
 Build task objects
 """
 
-from typing import Dict
+from typing import Dict, Any
 
 from pii_data.helper.exception import InvArgException
 
 from .task import BasePiiTask, CallablePiiTask, RegexPiiTask
+
+
+def is_pii_class(obj: Any) -> bool:
+    """
+    Return if an object is a PiiTask class object
+    """
+    return isinstance(obj, type) and issubclass(obj, BasePiiTask)
 
 
 def build_task(taskd: Dict) -> BasePiiTask:

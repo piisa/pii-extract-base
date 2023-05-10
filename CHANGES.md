@@ -1,5 +1,12 @@
 # ChangeLog
 
+## 0.4.0
+ * PiiCollectionBuilder modified, adding methods add_detector_fields() &
+   add_collection()
+ * PiiBaseTask: add task-level method if pii-level method is not available
+ * updated for pii-data v. 0.4.0
+ * refactor a number of modules (**note: breaking changes**)
+
 ## 0.3.1
  * removed cache of built tasks: now they are rebuilt again if included
    in lists (each task decides if it caches something)

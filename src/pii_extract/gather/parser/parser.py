@@ -1,5 +1,5 @@
 """
-Build full task descriptors from raw ones
+Build full task definitions from raw task descriptors.
 """
 
 import re
@@ -12,9 +12,10 @@ from typing import Dict, Tuple, Callable, Type, Union, Iterable, List
 from pii_data.types import PiiEnum
 from pii_data.helper.exception import InvArgException
 
+from ...build import is_pii_class
 from ...build.task import BasePiiTask, PiiTaskInfo
 from .defs import FIELD_CLASS, FIELD_IMP
-from .utils import _is_pii_class, InvPiiTask
+from .utils import InvPiiTask
 
 
 TYPE_TASKD_LIST = Iterable[Dict]
@@ -62,7 +63,7 @@ def _parse_taskdict(raw_taskd: Dict,
     # Check task class
     task_type = raw_taskd.get(FIELD_CLASS)
     if task_type is None:
-        if _is_pii_class(raw_taskd.get(FIELD_IMP)):
+        if is_pii_class(raw_taskd.get(FIELD_IMP)):
             task_type = "piitask"
         else:
             raise InvPiiTask("missing field: {}", FIELD_CLASS)
@@ -88,7 +89,7 @@ def _parse_taskdict(raw_taskd: Dict,
         raise InvPiiTask("regex spec should be a string")
     elif task[FIELD_CLASS] == "callable" and not isinstance(task[FIELD_IMP], Callable):
         raise InvPiiTask("callable spec should be a callable")
-    elif task[FIELD_CLASS] == "piitask" and not _is_pii_class(task[FIELD_IMP]):
+    elif task[FIELD_CLASS] == "piitask" and not is_pii_class(task[FIELD_IMP]):
         raise InvPiiTask("class spec should be a PiiTask object")
 
     if "kwargs" in raw_taskd:

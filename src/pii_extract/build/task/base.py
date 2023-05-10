@@ -56,9 +56,11 @@ class BasePiiTask:
 
         if not isinstance(pii, dict):
             raise InvArgException("invalid pii argument to PiiTask")
+        if task is None:
+            task = {}
 
         # Add context & method
-        self.method = pii.get("method")
+        self.method = pii.get("method") or task.get("method")
         context = pii.get("context")
         self.context = context_spec(context) if context else None
 
@@ -68,7 +70,7 @@ class BasePiiTask:
 
         # Store options
         self.pii_info = PiiEntityInfo(**pii_info)
-        self.task_info = PiiTaskInfo(**(task or {}))
+        self.task_info = PiiTaskInfo(**task)
         self.debug = debug
 
 

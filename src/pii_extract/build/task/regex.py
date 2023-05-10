@@ -1,6 +1,7 @@
 """
 Define the RegexPiiTask subclass
 """
+
 import regex
 
 from typing import Iterable
@@ -13,7 +14,7 @@ from .base import BasePiiTask
 
 class RegexPiiTask(BasePiiTask):
     """
-    A wrapper for a PII implemented as a regex pattern
+    A wrapper for a PII implemented as a regex pattern.
     Instead of the standard "re" package it uses the "regex" package (in
     backwards-compatible mode).
     Since it inherits from BasePiiTask, it will automatically apply context

@@ -7,8 +7,8 @@ from typing import Dict, List, Iterable
 from pii_data.helper.exception import UnimplementedException
 from pii_data.helper.logger import PiiLogger
 
-from ...helper.types import TYPE_STR_LIST
-from ...helper.utils import union_sets, taskd_field
+from pii_extract.helper.types import TYPE_STR_LIST
+from pii_extract.helper.utils import union_sets, taskd_field
 
 
 
