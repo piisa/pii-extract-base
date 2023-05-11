@@ -2,7 +2,7 @@
 Build collections of task definitions
 """
 
-from typing import Dict, List, Iterable
+from typing import Dict, List, Iterable, Union
 
 from pii_data.helper.logger import PiiLogger
 
@@ -15,6 +15,15 @@ from .sources.base import BaseTaskCollector
 from .utils import ensure_enum_list, filter_piid, TYPE_TASKENUM
 
 
+def is_lang_any(piid: Union[List, Dict]) -> bool:
+    """
+    See if a PII definition (or a list of them) is for the "any" language
+    """
+    if isinstance(piid, dict):
+        return piid["lang"] == LANG_ANY
+    else:
+        return any(t["lang"] == LANG_ANY for t in piid)
+
 
 class PiiTaskCollection:
     """
@@ -25,11 +34,11 @@ class PiiTaskCollection:
     def __init__(self, debug: bool = False):
         """
         """
-        self.task_def = []
-        self._lang = None
-        self._countries = None
         self._log = PiiLogger(__name__, debug)
-        self._num = 0
+        self._lang = None       # languages with collected tasks
+        self._countries = None  # countries with collected tasks
+        self._built = {}        # all built tasks
+        self.task_def = []      # list of task definitions collected
 
 
     def __repr__(self) -> str:
@@ -49,7 +58,7 @@ class PiiTaskCollection:
           - the number available task definitions
           - the number of built task objects
         """
-        return self._num if built else len(self.task_def)
+        return len(self._built) if built else len(self.task_def)
 
 
     def add_collector(self, tc: BaseTaskCollector) -> int:
@@ -139,7 +148,8 @@ class PiiTaskCollection:
                     pii: TYPE_TASKENUM = None,
                     add_any: bool = True) -> Iterable[BasePiiTask]:
         """
-        Build a list of tasks from their definitions stored in the collection.
+        Build and return a list of tasks from their definitions stored in
+        the collection.
           :param lang: select tasks to build for these languages
           :param country: select tasks to build for these countries
           :param country: select tasks to build for these PII types
@@ -152,20 +162,16 @@ class PiiTaskCollection:
         tasklist = self.taskdef_list(lang, country, pii=pii, add_any=add_any)
 
         # Build and return them
-        built = set()
         for td in tasklist:
 
-            # See if we have already been ask to build this task in this call
-            objid = td["obj"]["task"]
-            if objid in built:
-                continue  # we don't deliver the same task twice
+            # Define a language-specific identifier for the task
+            langid = LANG_ANY if is_lang_any(td["piid"]) else lang
+            objid = f"{langid}-{id(td['obj']['task'])}"
 
-            # Build it
-            task = build_task(td)
+            # Build it, if we don't have it yet
+            if objid not in self._built:
+                task = build_task(td)
+                self._built[objid] = task
 
             # Deliver it
-            if task:
-                built.add(objid)
-                yield task
-
-        self._num += len(built)
+            yield self._built[objid]

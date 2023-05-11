@@ -52,9 +52,12 @@ def task_info(args: argparse.Namespace, out: TextIO):
     """
     config = load_config(args.config) if args.config else None
     proc = PiiProcessor(config=config, skip_plugins=args.skip_plugins,
-                        debug=args.debug)
-    proc.build_tasks(args.lang, args.country, pii=args.tasks,
-                     add_any=not args.strict)
+                        languages=args.lang, debug=args.debug)
+
+    for lang in args.lang or [None]:
+        proc.build_tasks(lang, args.country, pii=args.tasks,
+                         add_any=not args.strict)
+
     print_tasks(args.lang, proc, out)
 
 
@@ -71,7 +74,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
     opt_com2 = argparse.ArgumentParser(add_help=False)
     c1 = opt_com2.add_argument_group('Task selection options')
-    c1.add_argument("--lang", help="language to select")
+    c1.add_argument("--lang", nargs="+", help="language(s) to select")
     c1.add_argument("--country", nargs="+", help="countries to select")
     c1.add_argument("--strict", action="store_true",
                     help="Include only tasks that comply strictly with selection")

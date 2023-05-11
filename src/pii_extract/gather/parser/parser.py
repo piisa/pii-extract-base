@@ -188,7 +188,7 @@ def _build_task_name(obj_data: Dict, pii: Dict):
 
 def _demux_field(pii_list: List[Dict], field: str) -> List[Dict]:
     """
-    Demultiplex a field that can be multiple from a PII dict
+    Demultiplex a field from a PII dict that can be multiple
     """
     out = []
     for pii in pii_list:
@@ -219,17 +219,19 @@ def parse_task_descriptor(taskd: Dict, defaults: Dict = None) -> Dict:
         raise InvPiiTask("task descriptor is not a dict")
 
     try:
+        # Get the object & info dicts
         obj_data, task_info = _parse_taskdict(taskd, defaults)
         #print("\nDATA", obj_data, task_info, taskd, sep="\n")
 
-        # Traverse the PII information and build the object fields
+        # Traverse the PII information and build the PII field
         pii_data = [_parse_piidict(t, obj_data, defaults)
                     for t in taskd.get("pii")]
 
-        # Demultiplex fields than can be multiple
+        # Demultiplex PII subfields than can be multiple
         for field in ("subtype", "lang", "country"):
             pii_data = _demux_field(pii_data, field)
 
+        # If we've got a single PII element, flatten the list
         if len(pii_data) == 1:
             pii_data = pii_data[0]
 

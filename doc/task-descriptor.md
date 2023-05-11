@@ -78,7 +78,7 @@ their values from elsewhere:
 
 ### PII Entity
 
-The PII field in the full task descriptor defines the [PII Entities] that will
+The `pii` field in the full task descriptor defines the [PII Entities] that will
 be detected by the task. Its main form is as a dictionary with the folllowing
 fields:
  * `type`: the PII Entity identifier for the task. It can be

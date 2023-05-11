@@ -4,7 +4,7 @@ normalized tests.
 They all use the "monkeypatch" pytest fixture
 """
 
-from typing import Dict
+from typing import Dict, Iterable
 
 from unittest.mock import Mock
 
@@ -47,11 +47,17 @@ class PluginMock:
     version = "0.999"
     description = "A plugin mock description"
 
-    def __init__(self, config: Dict = None, debug: bool = None):
-        pass
+    def __init__(self, config: Dict = None, debug: bool = None,
+                 languages: Iterable[str] = None):
+        self.languages = set(languages) if languages else None
 
     def get_plugin_tasks(self, lang: str = None):
-        return iter([RAW.TASK_PHONE_NUMBER, RAW.TASK_GOVID, RAW.TASK_CREDIT_CARD])
+        data = [RAW.TASK_PHONE_NUMBER, RAW.TASK_GOVID, RAW.TASK_CREDIT_CARD]
+        if self.languages:
+            print("\nDATA", data)
+            f = lambda d: (d.get("lang") or d["pii"][0]["lang"]) in self.languages
+            data = filter(f, data)
+        return iter(data)
 
 
 def patch_entry_points(monkeypatch):

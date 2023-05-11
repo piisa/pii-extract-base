@@ -1,5 +1,12 @@
 # ChangeLog
 
+## 0.5.0
+ * Added `languages` argument to PiiProcessor, to restrict the pre-collection
+   of tasks
+ * Ensure a task is not built twice in the same PiiTaskCollection, if it's for
+   the same language
+ * fixed task_info api call & script
+
 ## 0.4.0
  * PiiCollectionBuilder modified, adding methods add_detector_fields() &
    add_collection()
