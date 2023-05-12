@@ -17,7 +17,7 @@ A pii-extract plugin is a Python package that must have:
   * the entry point must be a class with:
      - a constructor (with optional arguments, see below)
      - a `get_tasks()` method delivering an iterable of task descriptors, with
-       an optional "lang" argument to restrict to a specific language
+       an optional "lang" argument to restrict tasks to one specific language
      - optional attributes `source`, `version` and `description`
 
 Plugin instantiation can be customized by a
@@ -28,10 +28,11 @@ by plugin entry point. Each plugin configuration can contain:
  * `options`: a dict of keyword arguments to pass to the plugin
    constructor. Those are specific for each plugin, and they are passed "as is".
  
- 
 A plugin constructor will have as arguments:
  * `config`: a PIISA configuration object, from which it can take its own
    section, if present
+ * `languages`: a list of languages to act as a pre-filter, restricting the
+   tasks provided by the plugin to those languages
  * `debug`: a boolean to activate debug output
  * `**options`: additional arguments, as defined in the extract config
  
@@ -39,6 +40,7 @@ One example of a plugin is [pii-extract-plg-regex].
 
 Installed plugins are automatically discovered by `pii-extract-base`, so if
 the task is inside a plugin, no further action is needed. 
+
 
 ## JSON
 

@@ -37,7 +37,7 @@ class JsonTaskCollector(BaseTaskCollector):
             raise ConfigException("invalid format field '{}' in task spec", fmt)
 
         header = task_spec.get("header", {})
-        reformat = RawTaskDefaults(header, normalize=True)
+        reformat = RawTaskDefaults(header, normalize=True, languages=self._lang)
         rawlist = task_spec.get("tasklist", [])
         try:
             yield from reformat(rawlist)

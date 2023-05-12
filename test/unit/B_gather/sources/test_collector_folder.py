@@ -158,3 +158,20 @@ def test170_gather_all_filter():
     got = [t["pii"][0]["type"] for t in tasks]
     exp = [PiiEnum.CREDIT_CARD, PiiEnum.GOV_ID, PiiEnum.GOV_ID]
     assert exp == got
+
+
+def test180_lang_filter():
+    """
+    Check a language filter in constructor
+    """
+    tc = MyTestTaskCollector(languages=["en"])
+    got = tc.language_list()
+    assert [LANG_ANY, "en"] == got
+    tasks = tc.gather_tasks()
+    assert len(list(tasks)) == 4
+
+    tc = MyTestTaskCollector(languages=["es"])
+    got = tc.language_list()
+    assert [LANG_ANY] == got
+    tasks = tc.gather_tasks()
+    assert len(list(tasks)) == 1

@@ -64,22 +64,22 @@ class FolderTaskCollector(BaseTaskCollector):
 
     def __init__(self, pkg: str, basedir: Path, source: str,
                  version: str = None, pii_filter: List[PiiEnum] = None,
-                 debug: bool = False):
+                 languages: Iterable[str] = None, debug: bool = False):
         """
           :param pkg: basename for the package
           :param basedir: base directory where the task implementations are
           :param source: source for the tasks (vendor/organization/package)
           :param version: version for the tasks
           :param pii_filter: collect only tasks for these PII types
+          :param languages: currently unused
           :param debug: print out debug information
         """
-        super().__init__(debug=debug)
-        self.basedir = Path(basedir)
-        self._debug = debug
+        super().__init__(languages=languages, debug=debug)
         self._pkg = pkg
         self._defaults = {'source': source or pkg}
         if version:
             self._defaults['version'] = version
+        self.basedir = Path(basedir)
         self._log(".. Folder task collector (%s, version=%s): init",
                   self.__class__.__name__, version)
 
@@ -155,7 +155,11 @@ class FolderTaskCollector(BaseTaskCollector):
         """
         Return all languages defined in the package
         """
-        return mod_subdir(self.basedir)
+        all_lang = mod_subdir(self.basedir)
+        if not self._lang:
+            return all_lang
+        else:
+            return [ln for ln in all_lang if ln in self._lang or ln == LANG_ANY]
 
 
     def country_list(self, lang: str = None) -> List[str]:
@@ -178,7 +182,7 @@ class FolderTaskCollector(BaseTaskCollector):
         """
         Import all task processors available for a given lang & country
         """
-        self._log(". gather-tasks lang=%s", lang)
+        self._log(".. gather-tasks lang=%s", lang)
         self._log(".. %s import from: %s/%s", self.__class__.__name__,
                   lang, country or "<all>")
         if lang is None or not isinstance(lang, str):

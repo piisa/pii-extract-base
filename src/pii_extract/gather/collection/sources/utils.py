@@ -4,9 +4,12 @@ from typing import Dict, Iterable
 
 from pii_data.types import PiiEnum
 
+from pii_extract.defs import LANG_ANY
 from pii_extract.build import is_pii_class
+from pii_extract.helper.utils import taskd_field
 from pii_extract.gather.parser import defs
 from pii_extract.gather.parser.utils import InvPiiTask
+from ..utils import piid_ok
 
 # ------------------------------------------------------------------------
 
@@ -62,12 +65,15 @@ class RawTaskDefaults:
     A class to add defaults to missing fields in a raw task descriptor
     """
 
-    def __init__(self, defaults: Dict = None, normalize: bool = True):
+    def __init__(self, defaults: Dict = None, normalize: bool = True,
+                 languages: Iterable[str] = None):
         """
           :param defaults: fields to add to the descriptor if they are missing
           :param normalize: ensure the descriptor is a proper dict
+          :param languages: restrict task descriptors to those languages
         """
         self._norm = normalize
+        self._lang = set(languages) if languages else None
         if defaults is None:
             defaults = {}
         self._piid = {k: v for k, v in defaults.items()
@@ -81,6 +87,10 @@ class RawTaskDefaults:
         Normalize and add defaults to a list of tasks
         """
         for raw in raw_list:
+            if self._lang:
+                lang = raw.get("lang") or raw.get("pii", {}).get("lang")
+                if lang != LANG_ANY and lang not in self._lang:
+                    continue
             if self._norm:
                 raw = normalize_rawtaskd(raw)
             if self._info:

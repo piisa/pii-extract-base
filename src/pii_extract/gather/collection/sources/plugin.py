@@ -31,14 +31,15 @@ from .defs import PII_EXTRACT_PLUGIN_ID
 
 class PluginTaskCollector(BaseTaskCollector):
 
-    def __init__(self, config: Dict = None, debug: bool = False):
+    def __init__(self, config: Dict = None, debug: bool = False,
+                 languages: Iterable[str] = None):
         """
         Check available plugins and create an instance
          :param config: a dictionary possibly containing:
             (a) configuration for the collector (options for plugin loaders)
             (b) configuration to pass to each loader class
         """
-        super().__init__(debug=debug)
+        super().__init__(languages=languages, debug=debug)
         self._tasks = None
         self._plugins = []
 
@@ -52,6 +53,8 @@ class PluginTaskCollector(BaseTaskCollector):
             if not cfg.get("load", True):
                 continue        # plugin is not to be activated
             options = cfg.get("options", {})
+            if self._lang:
+                options["languages"] = self._lang
 
             # Get the class for the plugin loader
             LoaderClass = entry.load()

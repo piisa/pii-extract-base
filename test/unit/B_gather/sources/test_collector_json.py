@@ -108,3 +108,18 @@ def test130_gather_all():
         }]
     }
     assert exp1 == got[1]
+
+
+def test140_gather_all_lang():
+    """
+    Apply a language filter
+    """
+    tc = mod.JsonTaskCollector(languages=["en"])
+    tc.add_tasks(_TASKFILE)
+    got = list(tc.gather_tasks())
+    assert len(got) == 2
+
+    tc = mod.JsonTaskCollector(languages=["es"])
+    tc.add_tasks(_TASKFILE)
+    got = list(tc.gather_tasks())
+    assert len(got) == 1

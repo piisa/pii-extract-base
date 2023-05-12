@@ -2,7 +2,7 @@
 Gather and return the collection of tasks from all available sources
 """
 
-from typing import Dict
+from typing import Dict, Iterable, Union
 
 from pii_data.helper.logger import PiiLogger
 
@@ -14,6 +14,7 @@ from .task_collection import PiiTaskCollection
 LOGGER = None
 
 def get_task_collection(config: Dict = None, load_plugins: bool = True,
+                        languages: Union[str, Iterable[str]] = None,
                         debug: bool = False) -> PiiTaskCollection:
     """
     Create a task collection object & collect all available tasks
@@ -27,18 +28,20 @@ def get_task_collection(config: Dict = None, load_plugins: bool = True,
     LOGGER("get_task_collection")
 
     piic = PiiTaskCollection(debug=debug)
+    if languages:
+        languages = [languages] if isinstance(languages, str) else list(languages)
 
     # Add task descriptors from installed plugins
     if load_plugins:
         LOGGER("load plugin tasks")
-        c = PluginTaskCollector(config=config, debug=debug)
+        c = PluginTaskCollector(config=config, languages=languages, debug=debug)
         piic.add_collector(c)
 
     # Add task descriptors from JSON configs
     task_cfg = config.get(FMT_CONFIG_TASKS) if config else None
     if task_cfg:
         LOGGER("load JSON tasks")
-        c = JsonTaskCollector(debug=debug)
+        c = JsonTaskCollector(languages=languages, debug=debug)
         c.add_tasks(task_cfg)
         piic.add_collector(c)
 

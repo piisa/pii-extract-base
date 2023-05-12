@@ -40,7 +40,7 @@ def ensure_enum_list(pii: TYPE_TASKENUM) -> List[PiiEnum]:
 def piid_ok(piid: Dict, lang: Set[str], country: Set[str],
             pii: Set[PiiEnum]) -> bool:
     """
-    Decide if a PII descriptor agrees with a language/country filter
+    Decide if a PII descriptor agrees with a type/language/country filter
     """
     if pii and not pii & taskd_field(piid, "pii"):
         return False

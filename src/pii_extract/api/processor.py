@@ -84,18 +84,20 @@ class PiiCollectionBuilder(PiiCollection):
 class PiiProcessor:
 
     def __init__(self, config: Dict = None, skip_plugins: bool = False,
-                 debug: bool = False):
+                 languages: Iterable[str] = None, debug: bool = False):
         """
         Initialize a PII Processor object
           :param config: configuration file, possibly containing a
             "pii-extract:tasks" section and/or a "pii-extract:plugins" section
           :param skip_plugins: skip loaginf pii-extract plugins
+          :param languages: define all languages that will be used
         """
         self._debug = debug
         self._log = PiiLogger(__name__, debug)
         self._tasks = {}
         self._stats = {"num": defaultdict(int), "entities": defaultdict(int)}
         self._ptc = get_task_collection(load_plugins=not skip_plugins,
+                                        languages=languages,
                                         config=config, debug=debug)
 
 
@@ -130,6 +132,7 @@ class PiiProcessor:
             (otherwise build all available types)
          :param add_any: when setting a specific lang and/or country, add also
             tasks valid for "any"
+         :return: the number of tasks obtained
         """
         # Sanitize input
         lang = lang.lower() if lang else None
@@ -148,7 +151,7 @@ class PiiProcessor:
         """
         Return a dictionary with all the instantiated tasks:
           - keys are tuples (task id, subtype)
-          - values are lists of tuples (country, task name, task doc)
+          - values are lists of tuples (language, country, task name, task doc)
         """
         if not self._tasks:
             raise ProcException("no detector tasks have been built")
@@ -157,16 +160,24 @@ class PiiProcessor:
 
         tasklist = self._tasks[lang] if lang else chain.from_iterable(self._tasks.values())
 
-        info = defaultdict(list)
+        out = defaultdict(list)
+        tset = set()
         for t in tasklist:
-            pii_list = t.pii_info
-            if isinstance(pii_list, PiiEntityInfo):
-                pii_list = [pii_list]
-            for pii in pii_list:
-                info[(pii.pii, pii.subtype)].append(
-                    (pii.country, t.task_info.name, t.task_info.doc)
+
+            tid = id(t)
+            if tid in tset:
+                continue
+            tset.add(tid)
+
+            pii_info_list = t.pii_info
+            if isinstance(pii_info_list, PiiEntityInfo):
+                pii_info_list = [pii_info_list]
+            for info in pii_info_list:
+                out[(info.pii, info.subtype)].append(
+                    (info.lang, info.country,
+                     t.task_info.name, t.task_info.doc)
                 )
-        return info
+        return out
 
 
     def detect_chunk(self, chunk: DocumentChunk, piic: PiiCollectionBuilder,

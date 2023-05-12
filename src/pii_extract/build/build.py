@@ -19,6 +19,7 @@ def is_pii_class(obj: Any) -> bool:
 def build_task(taskd: Dict) -> BasePiiTask:
     """
     Build a task object from its task definition
+      :param taskd: a task definition (i.e. a *parsed* task descriptor)
     """
     # Prepare standard arguments
     try:

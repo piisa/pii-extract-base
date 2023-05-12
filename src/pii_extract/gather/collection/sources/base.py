@@ -26,14 +26,14 @@ class BaseTaskCollector:
     implementations.
     """
 
-    def __init__(self, debug: bool = False):
+    def __init__(self, languages: Iterable[str] = None, debug: bool = False):
         """
-          :param pkg: basename for the package
-          :param basedir: base directory where the task implementations are
+          :param languages: restrict collection to some languages
           :param debug: print out debug information
         """
         self._debug = debug
         self._country = None
+        self._lang = set(languages) if languages else None
         self._log = PiiLogger(__name__, debug)
 
 

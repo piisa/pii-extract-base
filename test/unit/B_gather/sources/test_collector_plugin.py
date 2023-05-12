@@ -89,3 +89,18 @@ def test140_gather_all_lang(fixture_entry_points):
 
     got = fetch(["es"])
     assert len(got) == 0
+
+
+def test150_init_lang(fixture_entry_points):
+    """
+    Apply a language filter
+    """
+    tc = mod.PluginTaskCollector(languages=["en"])
+
+    fetch = lambda *args: list(tc.gather_tasks(*args))
+
+    got = fetch(LANG_ANY)
+    assert len(got) == 0
+
+    got = fetch("en")
+    assert len(got) == 2

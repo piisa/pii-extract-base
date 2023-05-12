@@ -225,11 +225,11 @@ def test210_tasks_info():
     pd.build_tasks("en")
     exp = {
         (PiiEnum.CREDIT_CARD, None): [
-            ('any', 'standard credit card',
+            ('any', 'any', 'standard credit card',
              'A simple credit card number detection for most international credit cards')
         ],
         (PiiEnum.PHONE_NUMBER, 'international phone number'): [
-            ('any', 'regex for PHONE_NUMBER:international phone number',
+            ('en', 'any', 'regex for PHONE_NUMBER:international phone number',
              'detect phone numbers that use international notation. Uses context')
         ]
     }

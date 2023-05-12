@@ -4,9 +4,6 @@ Test the process_file function
 
 import tempfile
 from pathlib import Path
-import argparse
-
-import pytest
 
 
 import pii_extract.app.task_info as mod
@@ -18,11 +15,13 @@ CONFIGFILE = Path(__file__).parents[2] / "data" / "tasklist-example.json"
 INFO = """. Built tasks [language=en]
 
  CREDIT_CARD   
+   Language: any
    Country: any
    Name: standard credit card
      A simple credit card number detection for most international credit cards
 
  PHONE_NUMBER   international phone number
+   Language: en
    Country: any
    Name: regex for PHONE_NUMBER:international phone number
      detect phone numbers that use international notation. Uses context

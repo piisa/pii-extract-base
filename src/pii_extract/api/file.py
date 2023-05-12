@@ -17,22 +17,23 @@ from ..defs import FMT_CONFIG_PLUGIN, FMT_CONFIG_TASKS
 from . import PiiProcessor
 
 
-def print_tasks(lang: str, proc: PiiProcessor, out: TextIO):
+def print_tasks(langlist: List[str], proc: PiiProcessor, out: TextIO):
     """
     Print out the list of built tasks
     """
     tw = TextWrapper(initial_indent="     ", subsequent_indent="     ", width=78)
-    print(f". Built tasks [language={lang}]", file=out)
+    print(f". Built tasks [language={','.join(langlist)}]", file=out)
     for (pii, subtype), tasklist in proc.task_info().items():
         print(f"\n {pii.name}   {subtype if subtype else ''}", file=out)
-        for n, (country, name, doc) in enumerate(tasklist):
+        for n, (lang, country, name, doc) in enumerate(tasklist):
             if n:
-                print()
-            print(f"   Country: {country}")
-            print(f"   Name: {name}")
+                print(file=out)
+            print(f"   Language: {lang}", file=out)
+            print(f"   Country: {country}", file=out)
+            print(f"   Name: {name}", file=out)
             if doc:
                 for ln in doc.splitlines():
-                    print(tw.fill(ln))
+                    print(tw.fill(ln), file=out)
 
 
 def print_stats(stats: Dict[str, Dict], out: TextIO):
