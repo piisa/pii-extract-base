@@ -35,6 +35,7 @@ class PiiTaskCollection:
         """
         """
         self._log = PiiLogger(__name__, debug)
+        self._debug = debug
         self._lang = None       # languages with collected tasks
         self._countries = None  # countries with collected tasks
         self._built = {}        # all built tasks
@@ -170,7 +171,7 @@ class PiiTaskCollection:
 
             # Build it, if we don't have it yet
             if objid not in self._built:
-                task = build_task(td)
+                task = build_task(td, debug=self._debug)
                 self._built[objid] = task
 
             # Deliver it

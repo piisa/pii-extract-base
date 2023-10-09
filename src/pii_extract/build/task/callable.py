@@ -7,7 +7,7 @@ from typing import Iterable, Callable
 from pii_data.types import PiiEntity
 from pii_data.types.doc import DocumentChunk
 
-from .base import BasePiiTask
+from .base import BasePiiTask, dbg_task, dbg_item
 
 
 class CallablePiiTask(BasePiiTask):
@@ -34,7 +34,12 @@ class CallablePiiTask(BasePiiTask):
         in the passed document to generate the Pii objects
         """
         kwargs = self.get_pii_defaults()
+        if self.debug:
+            dbg_task("Cll", self.pii_info)
         for cc in self.call(chunk.data, **self.kwargs):
+
+            if self.debug:
+                dbg_item(cc if isinstance(cc, str) else cc[0])
 
             # If we're given a tuple, it's (string, position); we can create
             # the PiiEntity and move on

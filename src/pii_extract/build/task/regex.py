@@ -9,7 +9,7 @@ from typing import Iterable
 from pii_data.types import PiiEntity
 from pii_data.types.doc import DocumentChunk
 
-from .base import BasePiiTask
+from .base import BasePiiTask, dbg_task, dbg_item
 
 
 class RegexPiiTask(BasePiiTask):
@@ -34,7 +34,11 @@ class RegexPiiTask(BasePiiTask):
         Iterate over the regex and produce Pii objects
         """
         defaults = self.get_pii_defaults()
+        if self.debug:
+            dbg_task("Rgx", self.pii_info)
         for cc in self.regex.finditer(chunk.data):
             g = cc.lastindex or 0
+            if self.debug:
+                dbg_item(cc.group(g))
             yield PiiEntity(self.pii_info, cc.group(g), chunk.id, cc.start(g),
                             **defaults)
