@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 0.6.0
+ * fix: must export class in pii_extract.api
+ * added debug output when executing tasks
+
 ## 0.5.0
  * Added `languages` argument to PiiProcessor, to restrict the pre-collection
    of tasks

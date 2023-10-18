@@ -16,7 +16,7 @@ def is_pii_class(obj: Any) -> bool:
     return isinstance(obj, type) and issubclass(obj, BasePiiTask)
 
 
-def build_task(taskd: Dict) -> BasePiiTask:
+def build_task(taskd: Dict, debug: bool = False) -> BasePiiTask:
     """
     Build a task object from its task definition
       :param taskd: a task definition (i.e. a *parsed* task descriptor)
@@ -35,11 +35,12 @@ def build_task(taskd: Dict) -> BasePiiTask:
 
     # Create the task object
     if tclass == "piitask":
-        proc = tobj(**base_args, **extra_kwargs)
+        proc = tobj(**base_args, **extra_kwargs, debug=debug)
     elif tclass == "callable":
-        proc = CallablePiiTask(tobj, **base_args, extra_kwargs=extra_kwargs)
+        proc = CallablePiiTask(tobj, **base_args, extra_kwargs=extra_kwargs,
+                               debug=debug)
     elif tclass in ("re", "regex"):
-        proc = RegexPiiTask(tobj, **base_args, **extra_kwargs)
+        proc = RegexPiiTask(tobj, **base_args, **extra_kwargs, debug=debug)
     else:
         raise InvArgException("invalid pii task type for {}: {}",
                               taskd["piid"].get("pii"), tclass)

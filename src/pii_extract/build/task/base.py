@@ -4,7 +4,7 @@ Define the base classes for Pii Tasks
 
 from dataclasses import dataclass, fields
 
-from typing import Iterable, Dict, Any
+from typing import Iterable, Dict, Any, List
 
 from pii_data.helper.misc import filter_dict
 from pii_data.helper.exception import InvArgException
@@ -14,6 +14,24 @@ from pii_data.types.doc import DocumentChunk
 from ...helper.exception import PiiUnimplemented
 from ...helper.normalizer import normalize
 from ...helper.context import context_spec, context_check
+
+
+
+def dbg_task(typ: str, *info: List[PiiEntityInfo], out=None):
+    """
+    Print out a brief task description
+    """
+    print(f".. Task{typ if typ else ''}:", end=" ", file=out)
+    for p in info:
+        print(f"{p.pii.name}/{p.lang}/{p.country}", end=" ", file=out)
+    print(file=out)
+
+
+def dbg_item(value: str, out=None):
+    """
+    Print out a found result
+    """
+    print(f"... found: [{value}]", file=out)
 
 
 # --------------------------------------------------------------------------

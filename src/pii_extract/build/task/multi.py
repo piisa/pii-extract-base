@@ -29,15 +29,17 @@ def _key(info: TYPE_KEY, lang: str = None, country: str = None,
 class BaseMultiPiiTask(BasePiiTask):
     """
     A variant base task that can detect more than one PII type
+    Note that the "find" method must be provided by a subclass
     """
 
-    def __init__(self, task: Dict, pii: List[Dict] = None):
+    def __init__(self, task: Dict, pii: List[Dict] = None, debug: bool = False):
         """
         Base constructor.
          :param task: task basic information
-         :parma pii: list of entities this task detects
+         :param pii: list of entities this task detects
         """
         # print("INIT", task, pii)
+        self.debug = debug
         self.task_info = PiiTaskInfo(**(task or {}))
         self.context = {}
         self.method = {}
