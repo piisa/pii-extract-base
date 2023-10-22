@@ -118,7 +118,7 @@ def context_check(text: str, context_spec: Dict, pii_pos: Tuple[int],
         src += src2[:width[1]]
 
     if debug:
-        print("TEXT:", src, "\nREGEX:", context_spec["value"])
+        print(f"... context (rgx={context_spec['regex']}): [{src}]")
 
     # Match
     if context_spec["regex"]:
