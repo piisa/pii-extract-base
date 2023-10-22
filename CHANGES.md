@@ -1,5 +1,8 @@
 # ChangeLog
 
+## 0.6.1
+ * fix: corrected debug output for context
+
 ## 0.6.0
  * fix: must export class in pii_extract.api
  * added debug output when executing tasks
