@@ -58,7 +58,7 @@ def task_info(args: argparse.Namespace, out: TextIO):
         proc.build_tasks(lang, args.country, pii=args.tasks,
                          add_any=not args.strict)
 
-    print_tasks(args.lang, proc, out)
+    print_tasks(args.lang or [], proc, out)
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:

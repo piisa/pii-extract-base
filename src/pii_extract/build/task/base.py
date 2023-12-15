@@ -64,11 +64,14 @@ class BasePiiTask:
     Base class for a Pii Detector Task
 .   """
 
-    def __init__(self, task: Dict, pii: Dict, debug: bool = False):
+    def __init__(self, task: Dict, pii: Dict, config: Dict = None,
+                 debug: bool = False):
         """
         Base constructor
           :param task: a task info dictionary
           :param pii: a PII descriptor dictionary
+          :param config: custom configuration for this task
+          :param debug: activate debug output
         """
         #print("INIT", task, pii)
 
@@ -76,11 +79,6 @@ class BasePiiTask:
             raise InvArgException("invalid pii argument to PiiTask")
         if task is None:
             task = {}
-
-        # Add context & method
-        self.method = pii.get("method") or task.get("method")
-        context = pii.get("context")
-        self.context = context_spec(context) if context else None
 
         # Fetch the options to be stored in the info subobject
         pii_info = {k: v for k, v in pii.items()
@@ -90,6 +88,12 @@ class BasePiiTask:
         self.pii_info = PiiEntityInfo(**pii_info)
         self.task_info = PiiTaskInfo(**task)
         self.debug = debug
+
+        # Add context & method, if defined and active
+        self.method = pii.get("method") or task.get("method")
+        do_context = config.get("context", True) if config else True
+        context = pii.get("context")
+        self.context = context_spec(context) if do_context and context else None
 
 
     def get_method(self, pii: Any, **kwargs):

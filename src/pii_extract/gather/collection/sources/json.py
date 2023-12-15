@@ -42,7 +42,9 @@ class JsonTaskCollector(BaseTaskCollector):
         try:
             yield from reformat(rawlist)
         except Exception as e:
-            raise InvArgException("error in task spec: {}", e) from e
+            name = header.get("source") or "<CONFIG>"
+            raise InvArgException("error in task descriptor in '{}': {}",
+                                  name, e) from e
 
 
     def add_tasks(self, tasks: Union[Dict, TYPE_CONFIG]):

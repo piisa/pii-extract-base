@@ -89,10 +89,11 @@ class PiiProcessor:
         Initialize a PII Processor object
           :param config: configuration file, possibly containing a
             "pii-extract:tasks" section and/or a "pii-extract:plugins" section
-          :param skip_plugins: skip loaginf pii-extract plugins
+          :param skip_plugins: skip loading pii-extract plugins
           :param languages: define all languages that will be used
         """
         self._debug = debug
+        self._config = config
         self._log = PiiLogger(__name__, debug)
         self._tasks = {}
         self._stats = {"num": defaultdict(int), "entities": defaultdict(int)}
@@ -141,8 +142,8 @@ class PiiProcessor:
             country = [country]
         self._country = [c.lower() for c in country] if country else None
         # Build the list of tasks
-        tasks = self._ptc.build_tasks(lang, self._country,
-                                      pii=pii, add_any=add_any)
+        tasks = self._ptc.build_tasks(lang, self._country, pii=pii,
+                                      add_any=add_any)
         self._tasks[lang] = list(tasks)
         return len(self._tasks[lang])
 
@@ -213,8 +214,7 @@ class PiiProcessor:
 
             # Execute the task, and process all detected entities
             for pii in task(chunk):
-                if "process" not in pii.fields:
-                    pii.fields["process"] = {"stage": "detection"}
+                pii.add_process_stage("detection")
                 piilist.append((pii, task.task_info, task.get_method(pii.info)))
                 self._stats["num"]["entities"] += 1
                 self._stats["entities"][pii.info.pii.name] += 1

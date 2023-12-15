@@ -32,13 +32,15 @@ class BaseMultiPiiTask(BasePiiTask):
     Note that the "find" method must be provided by a subclass
     """
 
-    def __init__(self, task: Dict, pii: List[Dict] = None, debug: bool = False):
+    def __init__(self, task: Dict, pii: List[Dict] = None,
+                 config: Dict = None, debug: bool = False):
         """
         Base constructor.
          :param task: task basic information
          :param pii: list of entities this task detects
         """
         # print("INIT", task, pii)
+        self.config = config
         self.debug = debug
         self.task_info = PiiTaskInfo(**(task or {}))
         self.context = {}
@@ -77,10 +79,11 @@ class BaseMultiPiiTask(BasePiiTask):
             pii_info = PiiEntityInfo(**ent)
             key = _key(pii_info)
 
-            # Add context & method
+            # Add method & context
             if method:
                 self.method[key] = method
-            if context:
+            do_context = self.config.get("context", True) if self.config else True
+            if do_context and context:
                 self.context[key] = context_spec(context)
 
             # Add entity info
@@ -112,6 +115,8 @@ class BaseMultiPiiTask(BasePiiTask):
     def check_context(self, text: str, pii: PiiEntity, prefix: int = 0) -> bool:
         """
         Check that a pii candidate has the required context around it
+        Modify the base class context check by enabling multiple contexts, one
+        per PII type
         """
         key = _key(pii.info.pii, lang=pii.info.lang,
                    country=pii.fields.get("country"))

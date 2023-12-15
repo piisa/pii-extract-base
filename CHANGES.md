@@ -1,5 +1,11 @@
 # ChangeLog
 
+## 0.x
+ * when building tasks, pass along the config to the task constructor
+ * can deactivate context filter via task config
+ * use add_process_stage() from pii-data 0.5.0
+ * fix in task_info script
+
 ## 0.6.1
  * fix: corrected debug output for context
 

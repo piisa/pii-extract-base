@@ -6,10 +6,8 @@ from pii_data.types import PiiEnum
 
 from pii_extract.defs import LANG_ANY
 from pii_extract.build import is_pii_class
-from pii_extract.helper.utils import taskd_field
 from pii_extract.gather.parser import defs
 from pii_extract.gather.parser.utils import InvPiiTask
-from ..utils import piid_ok
 
 # ------------------------------------------------------------------------
 

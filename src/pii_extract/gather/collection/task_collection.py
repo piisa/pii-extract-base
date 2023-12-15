@@ -6,7 +6,7 @@ from typing import Dict, List, Iterable, Union
 
 from pii_data.helper.logger import PiiLogger
 
-from ...defs import LANG_ANY, COUNTRY_ANY
+from ...defs import LANG_ANY, COUNTRY_ANY, FMT_CONFIG_TASKCFG
 from ...helper.utils import field_set, taskd_field, union_sets
 from ...build.task import BasePiiTask
 from ...build import build_task
@@ -31,11 +31,14 @@ class PiiTaskCollection:
     instantiated into task objects
     """
 
-    def __init__(self, debug: bool = False):
+    def __init__(self, task_config: Dict = None, debug: bool = False):
         """
+          :param task_config: custom config to pss to tsk constructors
+          :param debug:
         """
         self._log = PiiLogger(__name__, debug)
         self._debug = debug
+        self._taskcfg = task_config
         self._lang = None       # languages with collected tasks
         self._countries = None  # countries with collected tasks
         self._built = {}        # all built tasks
@@ -171,7 +174,7 @@ class PiiTaskCollection:
 
             # Build it, if we don't have it yet
             if objid not in self._built:
-                task = build_task(td, debug=self._debug)
+                task = build_task(td, config=self._taskcfg, debug=self._debug)
                 self._built[objid] = task
 
             # Deliver it

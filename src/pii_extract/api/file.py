@@ -80,7 +80,7 @@ def process_file(infile: str,
       :param infile: input source document
       :param outfile: output file where to store the detected PII entities
       :param configfile: JSON configuration file(s) to add (defining plugins
-         and/or tasks)
+         and/or tasks and/or task custom configs)
       :param skip_plugins: skip loading pii-extract task plugins
       :param lang: language the document is in (if not defined inside the doc)
       :param country: countries to build tasks for (if None, all applicable
