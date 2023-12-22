@@ -82,21 +82,39 @@ class RawTaskDefaults:
 
     def __call__(self, raw_list: Iterable[Dict]) -> Iterable[Dict]:
         """
-        Normalize and add defaults to a list of tasks
+        Normalize and add defaults to a list of tasks descriptors
+         :param raw_list: input list of raw PII descriptors
+         :return: output list with default values added
         """
         for raw in raw_list:
+
+            # See if we skip this descriptor (or part of it) because of language
             if self._lang:
-                lang = raw.get("lang") or raw.get("pii", {}).get("lang")
-                if lang != LANG_ANY and lang not in self._lang:
+                lang = raw.get("lang")
+                if lang is None:
+                    piid = raw.get("pii")
+                    if isinstance(piid, dict):
+                        lang = piid["lang"]
+                    elif isinstance(piid, list):
+                        raw["pii"] = [p for p in piid
+                                      if p["lang"] == LANG_ANY
+                                      or p["lang"] in self._lang]
+
+                if lang is not None and lang != LANG_ANY and lang not in self._lang:
                     continue
+
+            # Modify the descriptor as needed
             if self._norm:
                 raw = normalize_rawtaskd(raw)
             if self._info:
                 raw.update((k, v) for k,v in self._info.items() if k not in raw)
+
+            # Add defaults
             if self._piid:
                 piid = raw["pii"]
                 if isinstance(piid, dict):      # not normalized
                     raw["pii"] = _add_defaults(piid, self._piid)
                 else:
                     raw["pii"] = [_add_defaults(p, self._piid) for p in piid]
+
             yield raw

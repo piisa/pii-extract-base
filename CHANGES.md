@@ -5,6 +5,7 @@
  * can deactivate context filter via task config
  * use add_process_stage() from pii-data 0.5.0
  * fix in task_info script
+ * fix: filter out tasks by language, also for multiclass descriptors
 
 ## 0.6.1
  * fix: corrected debug output for context
