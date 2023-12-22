@@ -33,7 +33,6 @@ def test200_base():
     """
     Create base object
     """
-    
     task_spec = {"name": "example"}
     pii_spec = {"pii": PiiEnum.BLOCKCHAIN_ADDRESS, "lang": "es"}
     task = mod.BasePiiTask(task_spec, pii_spec)
@@ -113,7 +112,7 @@ def test240_class():
     class ExampleClass(mod.BasePiiTask):
         def find(self, chunk):
             return exp
-    
+
     pii = {"pii": PiiEnum.CREDIT_CARD, "lang": "any"}
     task = ExampleClass(pii=pii, task=None)
 

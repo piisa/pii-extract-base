@@ -41,7 +41,7 @@ def find_task_config(config: Dict, base_args: Dict) -> Dict:
     tversion = info["version"]
     config = [c for c in config if c.get("version") in (tversion, None)]
 
-    return config[0] if config else None
+    return config[0].get("config") if config else None
 
 
 def build_task(taskd: Dict, config: Dict = None,

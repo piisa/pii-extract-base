@@ -164,8 +164,9 @@ def _parse_piidict(piid: Dict, task: Dict, defaults: Dict = None) -> Dict:
 
 def _build_task_name(obj_data: Dict, pii: Dict):
     """
-    Build a name for a task
+    Build a name for a task, to be used as a last resort
     """
+    # Try to find a name from the object, for class or callables
     name = getattr(obj_data[FIELD_IMP], "__name__", None)
     if name and obj_data[FIELD_CLASS] == "piitask":
         name = " ".join(re.findall(r"[A-Z][^A-Z]*", name)).lower()
@@ -174,6 +175,7 @@ def _build_task_name(obj_data: Dict, pii: Dict):
     if name:
         return name
 
+    # Build set using the PII type(s) (and the subtype, if it exists)
     ent = [pii] if isinstance(pii, dict) else pii
     sall = set()
     for e in ent:
@@ -183,6 +185,7 @@ def _build_task_name(obj_data: Dict, pii: Dict):
             n += ":" + s
         sall.add(n)
 
+    # Create a name using the task type + the set of PIIs
     return obj_data[FIELD_CLASS] + " for " + "/".join(sorted(sall))
 
 

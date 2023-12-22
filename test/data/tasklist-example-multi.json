@@ -1,0 +1,40 @@
+{
+  "format": "piisa:config:pii-extract:tasks:v1",
+  "header": {
+    "lang": "en",
+    "source": "piisa:pii-extract-base:test",
+    "version": "0.0.1"
+  },
+  "tasklist": [
+    {
+      "class": "PiiTask",
+      "task": "taux.modules.any.credit_card_mock.CreditCardMock",
+      "pii": [
+	{
+	  "type": "CREDIT_CARD",
+	  "lang": "es"
+	},
+	{
+	  "type": "CREDIT_CARD",
+	  "lang": "en"
+	}
+      ]
+    },
+    {
+      "class": "regex-external",
+      "task": "taux.modules.en.any.international_phone_number.PATTERN_INT_PHONE",
+      "doc": "detect phone numbers that use international notation. Uses context",
+      "pii": {
+	"type": "PHONE_NUMBER",
+	"subtype": "international phone number",
+	"lang": "en",
+	"country": "any",
+	"context": {
+	  "value": ["ph", "phone", "fax"],
+	  "width": [16, 0],
+	  "type": "word"
+	}
+      }
+    }
+  ]
+}

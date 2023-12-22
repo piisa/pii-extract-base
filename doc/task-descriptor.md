@@ -66,11 +66,14 @@ Some of these fields, when not present in the descriptor dictionary, can take
 their values from elsewhere:
  * For `PiiTask` types, the `source`, `name`, `version`, `method` and
    `doc` fields can also be provided as class-level attributes: `pii_source`,
-   `pii_name`, `pii_version`, `pii_method` and `pii_doc`.
+   `pii_name`, `pii_version`, `pii_method` and `pii_doc`
  * `regex` tasks will automatically fill their `method` field with a default
-   value if it is not defined
- * For `PiiTask` and `callable` tasks, the `name` attribute can be generated
-   automatically from the class/callable Python name
+   value if still not defined
+ * If still no `name` attribute is available,
+    - for `PiiTask` and `callable` tasks, it can be generated automatically
+	  from the class/callable Python name
+    - else, a generic name will be created using the task type + the PII types
+	  (and subtypes) it detects
  * Finally, the `doc` field has two additional sources:
     - `callable` and `PiiTask` types can use the function/class docstring
     - else, a synthetic text using the other fields will be constructed
