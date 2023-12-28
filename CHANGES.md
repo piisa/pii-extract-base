@@ -3,7 +3,10 @@
 ## 0.7.0
  * when building tasks, pass along the config to the task constructor
  * can deactivate context filter via task config
+ * improved error reporting on regex compile exceptions
+ * improved debug messages
  * use add_process_stage() from pii-data 0.5.0
+ * fix: ensure process stage is not duplicated
  * fix in task_info script
  * fix: filter out tasks by language, also for multiclass descriptors
 

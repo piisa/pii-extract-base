@@ -78,6 +78,7 @@ class PiiTaskCollection:
         num = 0
         for num, taskd in enumerate(tc.gather_tasks(), start=1):
             self.task_def.append(parse_task_descriptor(taskd))
+        self._log(". gather-tasks from: %s: tasks=%d", tc, num)
         return num
 
 

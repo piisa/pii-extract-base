@@ -1,7 +1,7 @@
 """
 Define the base classes for Pii Tasks
 """
-
+import sys
 from dataclasses import dataclass, fields
 
 from typing import Iterable, Dict, Any, List
@@ -16,22 +16,38 @@ from ...helper.normalizer import normalize
 from ...helper.context import context_spec, context_check
 
 
+def dbg_msg(msg: str, *args, out=None):
+    """
+    Print a generic debug message
+    """
+    if args:
+        msg = msg.format(*args)
+    print(msg, file=out or sys.stderr)
+
 
 def dbg_task(typ: str, *info: List[PiiEntityInfo], out=None):
     """
     Print out a brief task description
+
+    .. DEPRECATED::
+       use the class method
     """
-    print(f".. Task{typ if typ else ''}:", end=" ", file=out)
+    print(f".. Task {typ if typ else ''}:", end=" ", file=out or sys.stderr)
     for p in info:
-        print(f"{p.pii.name}/{p.lang}/{p.country}", end=" ", file=out)
-    print(file=out)
+        print(f"{p.pii.name}/{p.lang}/{p.country}", end=" ",
+              file=out or sys.stderr)
+    print(file=out or sys.stderr)
 
 
-def dbg_item(value: str, out=None):
+def dbg_item(self, value: str, out=None):
     """
     Print out a found result
+
+    .. DEPRECATED::
+       use the class method
     """
-    print(f"... found: [{value}]", file=out)
+    print(f"... found: [{value}]", file=out or sys.stderr)
+
 
 
 # --------------------------------------------------------------------------
@@ -94,6 +110,27 @@ class BasePiiTask:
         do_context = config.get("context", True) if config else True
         context = pii.get("context")
         self.context = context_spec(context) if do_context and context else None
+
+
+    def dbg_task(self, typ: str, out=None):
+        """
+        Print out a brief task description
+        """
+        print(f".. Task {typ if typ else ''}:", end=" ", file=out or sys.stderr)
+        info = self.pii_info
+        if isinstance(info, PiiEntityInfo):
+            info = [info]
+        for p in info:
+            print(f"{p.pii.name}/{p.lang}/{p.country}", end=" ",
+                  file=out or sys.stderr)
+        print(file=out or sys.stderr)
+
+
+    def dbg_item(self, value: str, out=None):
+        """
+        Print out a found result
+        """
+        print(f"... found: [{value}]", file=out or sys.stderr)
 
 
     def get_method(self, pii: Any, **kwargs):

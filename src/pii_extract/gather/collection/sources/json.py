@@ -25,6 +25,10 @@ class JsonTaskCollector(BaseTaskCollector):
         self.tasks = []
 
 
+    def __repr__(self) -> str:
+        return f"<JsonTaskCollector lang={self._lang}>"
+
+
     def _parse_tasks(self, task_spec: Dict) -> Iterable[Dict]:
         """
         Parse a list of task descriptors

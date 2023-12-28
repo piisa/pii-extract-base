@@ -6,8 +6,8 @@ import regex
 
 from typing import Tuple, List, Dict, Union
 
-from ..defs import LANG_ANY
-from .exception import InvArgException
+from pii_data.helper.exception import InvArgException, BuildException
+
 from .normalizer import normalize
 
 
@@ -71,7 +71,12 @@ def context_spec(spec: Union[str, List, Dict], lang=str) -> Dict:
         value = [regex.compile(r"\b" + _norm(v, lang, True) + r"\b") for v in value]
     elif ctype == "regex":
         out["regex"] = True
-        value = [regex.compile(v, flags=regex.X) for v in value]
+        try:
+            value = [regex.compile(v, flags=regex.X) for v in value]
+        except Exception as e:
+            raise BuildException("cannot compile context regex: {}: {}",
+                                 e, value) from e
+
     else:
         raise InvArgException("invalid context type: {}", ctype)
 

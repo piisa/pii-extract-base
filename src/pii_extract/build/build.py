@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 from pii_data.helper.exception import InvArgException
 
-from .task import BasePiiTask, CallablePiiTask, RegexPiiTask
+from .task import BasePiiTask, CallablePiiTask, RegexPiiTask, dbg_msg
 
 
 def is_pii_class(obj: Any) -> bool:
@@ -66,6 +66,8 @@ def build_task(taskd: Dict, config: Dict = None,
 
     # Find custom config for this task
     config = find_task_config(config, base_args)
+    if debug and config:
+        dbg_msg(".. building {}: config found", taskd["info"].get("name"))
 
     # Create the task object
     if tclass == "piitask":

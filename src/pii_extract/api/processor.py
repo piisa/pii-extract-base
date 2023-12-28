@@ -17,6 +17,7 @@ from pii_data.types.doc import SrcDocument, DocumentChunk
 from pii_data.helper.exception import ProcException, InvArgException
 
 from ..helper.logger import PiiLogger
+from ..helper.utils import set_pii_stage
 from ..build.task import PiiTaskInfo
 from ..gather.collection import get_task_collection, TYPE_TASKENUM
 from ..gather.collection.sources import JsonTaskCollector
@@ -190,7 +191,8 @@ class PiiProcessor:
           :param piic: collection to add the detected PII instances to
           :param default_lang: language to use, if the chunk does not define one
         """
-        self._log("... Detect chunk=%s", chunk.id, level=logging.DEBUG)
+        self._log("... Detect chunk=%s (size=%d)", chunk.id,
+                  len(chunk.data), level=logging.DEBUG)
         if not self._tasks:
             raise ProcException("no built detector tasks")
 
@@ -214,7 +216,7 @@ class PiiProcessor:
 
             # Execute the task, and process all detected entities
             for pii in task(chunk):
-                pii.add_process_stage("detection")
+                set_pii_stage(pii)
                 piilist.append((pii, task.task_info, task.get_method(pii.info)))
                 self._stats["num"]["entities"] += 1
                 self._stats["entities"][pii.info.pii.name] += 1

@@ -25,7 +25,7 @@ def get_task_collection(config: Dict = None, load_plugins: bool = True,
     global LOGGER
     if LOGGER is None:
         LOGGER = PiiLogger(__name__, debug)
-    LOGGER("get_task_collection")
+    LOGGER("TaskCol: get_task_collection")
 
     task_cfg = config.get(FMT_CONFIG_TASKCFG) if config else None
     piic = PiiTaskCollection(task_config=task_cfg, debug=debug)
@@ -34,14 +34,15 @@ def get_task_collection(config: Dict = None, load_plugins: bool = True,
 
     # Add task descriptors from installed plugins
     if load_plugins:
-        LOGGER("load plugin tasks")
+        LOGGER("TaskCol: load plugin tasks")
         c = PluginTaskCollector(config=config, languages=languages, debug=debug)
         piic.add_collector(c)
 
     # Add the additional custom task descriptors defined in config
     add_task_cfg = config.get(FMT_CONFIG_TASKS) if config else None
     if add_task_cfg:
-        LOGGER("load JSON tasks")
+        src = add_task_cfg.get("header", {}).get("source", "<CONFIG>")
+        LOGGER("TaskCol: load JSON tasks from: %s", src)
         c = JsonTaskCollector(languages=languages, debug=debug)
         c.add_tasks(add_task_cfg)
         piic.add_collector(c)
