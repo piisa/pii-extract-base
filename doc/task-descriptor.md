@@ -70,11 +70,11 @@ their values from elsewhere:
  * `regex` tasks will automatically fill their `method` field with a default
    value if still not defined
  * If still no `name` attribute is available,
-    - for `PiiTask` and `callable` tasks, it can be generated automatically
+    - for `callable` and `PiiTask` types, it can be generated automatically
 	  from the class/callable Python name
     - else, a generic name will be created using the task type + the PII types
 	  (and subtypes) it detects
- * Finally, the `doc` field has two additional sources:
+ * Finally, the `doc` field has also two additional sources:
     - `callable` and `PiiTask` types can use the function/class docstring
     - else, a synthetic text using the other fields will be constructed
 

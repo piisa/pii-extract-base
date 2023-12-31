@@ -149,11 +149,13 @@ class PiiProcessor:
         return len(self._tasks[lang])
 
 
-    def task_info(self, lang: str = None) -> Dict[Tuple, Tuple]:
+    def task_info(self, lang: str = None,
+                  asdict: bool = False) -> Dict[Tuple, Tuple]:
         """
         Return a dictionary with all the instantiated tasks:
           - keys are tuples (task id, subtype)
-          - values are lists of tuples (language, country, task name, task doc)
+          - values are dicts or lists of tuples
+             (language, country, task name, task doc, task method)
         """
         if not self._tasks:
             raise ProcException("no detector tasks have been built")
@@ -175,10 +177,14 @@ class PiiProcessor:
             if isinstance(pii_info_list, PiiEntityInfo):
                 pii_info_list = [pii_info_list]
             for info in pii_info_list:
-                out[(info.pii, info.subtype)].append(
-                    (info.lang, info.country,
-                     t.task_info.name, t.task_info.doc)
-                )
+                method = t.get_method(info)
+                value = (info.lang, info.country, t.task_info.name,
+                         t.task_info.doc, method)
+                if asdict:
+                    names = ("lang", "country", "name", "doc", "method")
+                    value = dict(zip(names, value))
+                out[(info.pii, info.subtype)].append(value)
+
         return out
 
 

@@ -35,11 +35,13 @@ class BaseMultiPiiTask(BasePiiTask):
     def __init__(self, task: Dict, pii: List[Dict] = None,
                  config: Dict = None, debug: bool = False):
         """
-        Base constructor.
-         :param task: task basic information
-         :param pii: list of entities this task detects
+        Base constructor for a multitask
+          :param task: task basic information
+          :param pii: list of entities this task detects
+          :param config: custom config for the task
+          :param debug: activate debug output
         """
-        # print("INIT", task, pii)
+        #print("INIT", task, pii)
         self.config = config
         self.debug = debug
         self.task_info = PiiTaskInfo(**(task or {}))

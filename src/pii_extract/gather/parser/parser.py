@@ -108,7 +108,7 @@ def _parse_taskdict(raw_taskd: Dict,
             if v:
                 info[f] = v
 
-    # Fill in description from docstring
+    # Fill in the description field from the docstring
     if "doc" not in info and not isinstance(task[FIELD_IMP], str):
         description = getattr(task[FIELD_IMP], "__doc__", None)
         if description:
@@ -166,7 +166,7 @@ def _build_task_name(obj_data: Dict, pii: Dict):
     """
     Build a name for a task, to be used as a last resort
     """
-    # Try to find a name from the object, for class or callables
+    # For types class or callable, try to find a name from object attributes
     name = getattr(obj_data[FIELD_IMP], "__name__", None)
     if name and obj_data[FIELD_CLASS] == "piitask":
         name = " ".join(re.findall(r"[A-Z][^A-Z]*", name)).lower()
@@ -175,7 +175,7 @@ def _build_task_name(obj_data: Dict, pii: Dict):
     if name:
         return name
 
-    # Build set using the PII type(s) (and the subtype, if it exists)
+    # Build a set using the PII type(s) (and the subtype, if it exists)
     ent = [pii] if isinstance(pii, dict) else pii
     sall = set()
     for e in ent:

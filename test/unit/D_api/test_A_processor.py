@@ -20,7 +20,7 @@ from taux import auxpatch
 
 DATADIR = Path(__file__).parents[2] / "data"
 CONFIGFILE = DATADIR / "tasklist-example.json"
-DOCUMENT = DATADIR /"minidoc-example.yaml"
+DOCUMENT = DATADIR / "minidoc-example.yaml"
 
 
 @pytest.fixture
@@ -227,11 +227,11 @@ def test210_tasks_info():
     exp = {
         (PiiEnum.CREDIT_CARD, None): [
             ('any', 'any', 'standard credit card',
-             'A simple credit card number detection for most international credit cards')
+             'Unit test credit card number detection', 'regex,checksum')
         ],
         (PiiEnum.PHONE_NUMBER, 'international phone number'): [
             ('en', 'any', 'regex for PHONE_NUMBER:international phone number',
-             'detect phone numbers that use international notation. Uses context')
+             'Unit test international phone number [regex-external]', 'regex,context')
         ]
     }
     #print(got)
@@ -286,7 +286,8 @@ def test230_tasks_detect_header(fixture_timestamp):
             2: {
                 "name": "standard credit card",
                 "source": "piisa:pii-extract-base:test",
-                "version": "0.0.1"
+                "version": "0.0.1",
+                "method": "regex,checksum"
             }
         }
     }
@@ -368,6 +369,30 @@ def test250_tasks_detect_pii_config(fixture_timestamp):
     doc = LocalSrcDocumentFile(DOCUMENT)
     r = pd.detect(doc)
 
+    # The header has change: method for phone number no longer uses context
+    exp = {
+        "date": "2045-01-30",
+        "format": "piisa:pii-collection:v1",
+        "lang": "en",
+        "stage": "detection",
+        "detectors": {
+            1: {
+                "name": "regex for PHONE_NUMBER:international phone number",
+                "source": "piisa:pii-extract-base:test",
+                "version": "0.0.1",
+                "method": "regex"  # no context
+            },
+            2: {
+                "name": "standard credit card",
+                "source": "piisa:pii-extract-base:test",
+                "version": "0.0.1",
+                "method": "regex,checksum"
+            }
+        }
+    }
+    assert exp == r.header()
+
+
     pii = list(r)
 
     # Now, since we have deactivated context for phone numbers, there's one more
@@ -422,6 +447,7 @@ def test250_tasks_detect_pii_config(fixture_timestamp):
         'end': 49
     }
     assert exp == pii[2].asdict()
+
 
 
 def test300_tasks_detect_chunk(fixture_timestamp):

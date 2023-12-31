@@ -97,7 +97,7 @@ def test130_gather_all():
     exp1 = {
         "class": "regex-external",
         "task": "taux.modules.en.any.international_phone_number.PATTERN_INT_PHONE",
-        "doc": "detect phone numbers that use international notation. Uses context",
+        "doc": "Unit test international phone number [regex-external]",
         "source": "piisa:pii-extract-base:test",
         "version": "0.0.1",
         "pii": [{

@@ -78,7 +78,7 @@ class PiiTaskInfo:
 class BasePiiTask:
     """
     Base class for a Pii Detector Task
-.   """
+    """
 
     def __init__(self, task: Dict, pii: Dict, config: Dict = None,
                  debug: bool = False):
@@ -101,20 +101,24 @@ class BasePiiTask:
                     if k not in ("method", "extra", "context")}
 
         # Store options
-        self.pii_info = PiiEntityInfo(**pii_info)
-        self.task_info = PiiTaskInfo(**task)
+        self.config = config
         self.debug = debug
+        self.task_info = PiiTaskInfo(**task)
+        if not self.task_info.method:
+            self.task_info.method = pii.get("method")
+        self.pii_info = PiiEntityInfo(**pii_info)
 
         # Add context & method, if defined and active
-        self.method = pii.get("method") or task.get("method")
         do_context = config.get("context", True) if config else True
         context = pii.get("context")
         self.context = context_spec(context) if do_context and context else None
+        if not self.context and self.task_info.method:
+            self.task_info.method = ','.join(v for v in self.task_info.method.split(',') if v != "context")
 
 
     def dbg_task(self, typ: str, out=None):
         """
-        Print out a brief task description
+        Debug output: print out a brief task description
         """
         print(f".. Task {typ if typ else ''}:", end=" ", file=out or sys.stderr)
         info = self.pii_info
@@ -128,7 +132,7 @@ class BasePiiTask:
 
     def dbg_item(self, value: str, out=None):
         """
-        Print out a found result
+        Debug output: print out a match result
         """
         print(f"... found: [{value}]", file=out or sys.stderr)
 
@@ -136,8 +140,9 @@ class BasePiiTask:
     def get_method(self, pii: Any, **kwargs):
         """
         Return the 'method' metadata field
+          :param pii: dummy argument, for compatibility with BaseMultiPiiTask
         """
-        return self.method
+        return self.task_info.method
 
 
     def get_pii_defaults(self) -> Dict:

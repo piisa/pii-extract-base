@@ -24,14 +24,17 @@ def print_tasks(langlist: List[str], proc: PiiProcessor, out: TextIO):
     tw = TextWrapper(initial_indent="     ", subsequent_indent="     ", width=78)
     print(f". Built tasks [language={','.join(langlist)}]", file=out)
     for (pii, subtype), tasklist in proc.task_info().items():
-        print(f"\n {pii.name}   {subtype if subtype else ''}", file=out)
-        for n, (lang, country, name, doc) in enumerate(tasklist):
+        print(f"\n {pii.name}{ ' > ' + subtype if subtype else ''}", file=out)
+        for n, (lang, country, name, doc, method) in enumerate(tasklist):
             if n:
                 print(file=out)
             print(f"   Language: {lang}", file=out)
             print(f"   Country: {country}", file=out)
             print(f"   Name: {name}", file=out)
+            if method:
+                print(f"   Method: {method}", file=out)
             if doc:
+                print("   Description:", file=out)
                 for ln in doc.splitlines():
                     print(tw.fill(ln), file=out)
 
