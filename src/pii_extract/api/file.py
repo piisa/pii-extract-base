@@ -50,18 +50,23 @@ def print_stats(stats: Dict[str, Dict], out: TextIO):
             print(f"   {k:20} :  {v:5}", file=sys.stderr)
 
 
-def piic_format(filename: str) -> str:
+def piic_format(filename: str, default: str = None) -> str:
     """
     Find out the desired file format for a PII Collection
+     :param filename: output filename, to analyze the file extension
+     :param default: a default format, if file extension inspection fails
     """
     ext = base_extension(filename)
     if ext == ".json":
         return "json"
     elif ext in (".ndjson", ".jsonl"):
         return "ndjson"
+    elif default:
+        return default
     else:
         raise InvArgException("cannot recognize piic output format for: {}",
                               filename)
+
 
 # ----------------------------------------------------------------------
 

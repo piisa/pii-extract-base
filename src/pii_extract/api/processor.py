@@ -6,16 +6,19 @@ Definition of the main PiiProcessor object: a class that
  * creating a PiiCollection with the results.
 """
 
-import logging
+from pathlib import Path
 from collections import defaultdict
 from itertools import chain
+import logging
 
 from typing import Tuple, List, Dict, Iterable, Union
 
 from pii_data.types import PiiEntityInfo, PiiEntity, PiiDetector, PiiCollection
 from pii_data.types.doc import SrcDocument, DocumentChunk
+from pii_data.helper.config import load_config, TYPE_CONFIG_LIST
 from pii_data.helper.exception import ProcException, InvArgException
 
+from .. import defs
 from ..helper.logger import PiiLogger
 from ..helper.utils import set_pii_stage
 from ..build.task import PiiTaskInfo
@@ -37,6 +40,25 @@ def check_language(lang1: TYPE_LANG, lang2: TYPE_LANG) -> bool:
     if isinstance(lang2, str):
         lang2 = [lang2]
     return bool(set(lang1) & set(lang2))
+
+
+def load_module_config(configlist: TYPE_CONFIG_LIST) -> Dict:
+    """
+    Load the configurations for this module
+    """
+    # Ensure configlist is a list
+    if not configlist:
+        configlist = []
+    elif isinstance(configlist, (str, Path, dict)):
+        configlist = [configlist]
+
+    # Load base config + passed config
+    base = Path(__file__).parents[1] / "resources" / "plugins.json"
+    fmts = defs.FMT_CONFIG_PLUGIN, defs.FMT_CONFIG_TASKS
+    return load_config([base] + configlist, fmts)
+
+
+# --------------------------------------------------------------------------
 
 
 
@@ -84,23 +106,25 @@ class PiiCollectionBuilder(PiiCollection):
 
 class PiiProcessor:
 
-    def __init__(self, config: Dict = None, skip_plugins: bool = False,
+    def __init__(self, config: TYPE_CONFIG_LIST = None,
+                 skip_plugins: bool = False,
                  languages: Iterable[str] = None, debug: bool = False):
         """
         Initialize a PII Processor object
-          :param config: configuration file, possibly containing a
+          :param config: a configuration, possibly containing a
             "pii-extract:tasks" section and/or a "pii-extract:plugins" section
           :param skip_plugins: skip loading pii-extract plugins
           :param languages: define all languages that will be used
+          :param debug:
         """
         self._debug = debug
-        self._config = config
+        self._config = load_module_config(config)
         self._log = PiiLogger(__name__, debug)
         self._tasks = {}
         self._stats = {"num": defaultdict(int), "entities": defaultdict(int)}
         self._ptc = get_task_collection(load_plugins=not skip_plugins,
                                         languages=languages,
-                                        config=config, debug=debug)
+                                        config=self._config, debug=debug)
 
 
     def __repr__(self) -> str:

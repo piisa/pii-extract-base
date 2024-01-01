@@ -60,15 +60,27 @@ class PluginMock:
         return iter(data)
 
 
-def patch_entry_points(monkeypatch):
+def patch_entry_points(monkeypatch, num: int = 1):
     """
-    Monkey-patch the the importlib.metadata.entry_points call to return
-    our plugin entry point
+    Monkey-patch the the importlib.metadata.entry_points() call to return
+    our plugin entry point list
     """
-    mock_entry = Mock()
-    mock_entry.name = "piisa-detectors-mock-plugin"
-    mock_entry.load = Mock(return_value=PluginMock)
+    plist = []
+    for i in range(num):
+        mock_entry = Mock()
+        mock_entry.name = f"piisa-detectors-mock-plugin-{i+1}"
+        mock_entry.load = Mock(return_value=PluginMock)
+        plist.append(mock_entry)
 
-    mock_ep = Mock(return_value={PII_EXTRACT_PLUGIN_ID: [mock_entry]})
+    def side_effect(key=None, group=None):
+        if key == PII_EXTRACT_PLUGIN_ID or group == PII_EXTRACT_PLUGIN_ID:
+            return plist
+        else:
+            return []
 
-    monkeypatch.setattr(plugin_mod, 'entry_points', mock_ep)
+    mock_ep = Mock()
+    mock_ep.get = Mock(side_effect=side_effect)   # Python < 3.10
+    mock_ep.select = Mock(side_effect=side_effect)  # Python >= 3.10
+    mock_ep_cls = Mock(return_value=mock_ep)
+
+    monkeypatch.setattr(plugin_mod, 'entry_points', mock_ep_cls)

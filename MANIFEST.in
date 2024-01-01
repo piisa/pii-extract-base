@@ -1,1 +1,3 @@
 include requirements.txt
+include src/pii_extract/resources/*.json
+

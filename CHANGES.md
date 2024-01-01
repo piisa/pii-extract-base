@@ -1,18 +1,27 @@
 # ChangeLog
 
 ## 0.7.0
- * return task method in task_info()
- * allow specification of plugins to load in task_info script
- * when building tasks, pass along the config to the task constructor
- * can deactivate context filter via task config (will also remove it from the
-   task_info.method field)
- * improved error reporting on regex compile exceptions
- * improved debug messages
- * use add_process_stage() from pii-data 0.5.0
- * fix: correctly add task "method" info field when building a task object
- * fix: ensure process stage is not duplicated
- * fix in task_info script
- * fix: filter out tasks by language, also for multiclass descriptors
+ * Config changes
+    - allow specification of plugin load order
+	   - set a default order for known plugins
+    - allow task custom configuration:
+       - when building tasks, pass along the config to the task constructor
+       - can deactivate context filter via task config (will also remove it from
+	     the `task_info.method` field)
+ * API improvements
+    - return task method in task_info()
+    - allow specification of plugins to load in task_info script
+	- allow default format in piic_format()
+ * Behavior changes:
+    - improved error reporting on regex compile exceptions
+    - improved debug messages
+    - use add_process_stage() from pii-data 0.5.0
+ * fixes
+     - correctly add task "method" info field when building a task object
+     - ensure process stage is not duplicated
+     - fix in task_info script
+     - filter out tasks by language, also for multiclass descriptors
+	 - updated plugin entry point selection for Python >= 3.10
 
 ## 0.6.1
  * fix: corrected debug output for context

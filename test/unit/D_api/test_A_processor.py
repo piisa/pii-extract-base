@@ -24,13 +24,12 @@ DOCUMENT = DATADIR / "minidoc-example.yaml"
 
 
 @pytest.fixture
-def fixture_entry_points(monkeypatch):
-    auxpatch.patch_entry_points(monkeypatch)
-
-
-@pytest.fixture
 def fixture_timestamp(monkeypatch):
     auxpatch.patch_timestamp(monkeypatch)
+
+@pytest.fixture
+def fixture_entry_points(monkeypatch):
+    auxpatch.patch_entry_points(monkeypatch)
 
 
 # -------------------------------------------------------------------------
@@ -77,10 +76,12 @@ def test120_constructor_plugin_json(fixture_entry_points):
     pd = mod.PiiProcessor(skip_plugins=True, config=config)
     assert str(pd) == '<PiiProcessor #2>'
 
-    # Specify plugin load
+    # Specify plugins to load
     config = load_config(CONFIGFILE)
     config[defs.FMT_CONFIG_PLUGIN] = {
-        "piisa-detectors-mock-plugin": {"load": False}
+        "plugins": {
+            "piisa-detectors-mock-plugin-1": {"load": False}
+        }
     }
     pd = mod.PiiProcessor(config=config)
     assert str(pd) == '<PiiProcessor #2>'
@@ -88,7 +89,9 @@ def test120_constructor_plugin_json(fixture_entry_points):
     # Specify plugins to load
     config = load_config(CONFIGFILE)
     config[defs.FMT_CONFIG_PLUGIN] = {
-        "piisa-detectors-mock-plugin": {"load": True}
+        "plugins": {
+            "piisa-detectors-mock-plugin-1": {"load": True}
+        }
     }
     pd = mod.PiiProcessor(config=config)
     assert str(pd) == '<PiiProcessor #5>'
