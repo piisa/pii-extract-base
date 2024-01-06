@@ -16,9 +16,9 @@ TASK_PHONE_NUMBER = {
         'class': 'regex',
         'task': PATTERN_INT_PHONE,
     },
-    'info': {    
+    'info': {
         'name': 'international phone number',
-        'doc': 'detect phone numbers that use international notation. Uses context'
+        'doc': 'Unit test international phone number detector'
     },
     'piid': {
         'pii': PiiEnum.PHONE_NUMBER,
@@ -71,12 +71,13 @@ TASK_CREDIT_CARD = {
     },
     'info': {
         'name': 'standard credit card',
-        'doc': 'A simple credit card number detection for most international credit cards',
+        'doc': 'Unit test credit card number detection',
     },
     'piid': {
         'pii': PiiEnum.CREDIT_CARD,
         'lang': 'any',
-        'country': 'any'
+        'country': 'any',
+        'method': 'regex,checksum'
     }
 }
 

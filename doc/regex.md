@@ -34,15 +34,15 @@ belonging to one of these four groups:
 1. `weak-regex`: a regex that can cause a considerable number of false
    positives. E.g. _any list of 8 digits_
 2. `soft-regex`: a regex that has enough structure to avoid a great portion
-   of false positives, but still not very distinctive. E.g. _a list of 8 dgits
+   of false positives, but still not very distinctive. E.g. _a list of 8 digits
    that starts with 0, 1 or 2_
 3. `regex`: a regex that should mostly limit to actual matches, plus some
    occasional false positives. E.g. _a list of 8 digits followed by a dash and
-   another digit_
+   a single ASCII letter_
 4. `strong regex`: a regex that is very unlikely to match anything other
    than true positives. E.g. _a list of 3 groups of 3 digits separated by
    dashes, in which the first group contains only 1, 2, or 3 and the last
-   only 5, 6 or 7_ or _a full email address, with a valid domain_
+   only 5, 6 or 7_ or _a full email address, containing a valid domain_
   
 Of course this classification is inherently subjective, since it is difficult
 to perfectly foresee the exact number of false positives that a regex will

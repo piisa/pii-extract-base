@@ -25,7 +25,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
     g2 = parser.add_argument_group("Task specification")
     g2.add_argument("--configfile", "--config", nargs="+",
-                    help="add pii tasks and/or plugins defined in JSON files")
+                    help="add custom configuration (plugins, additional pii tasks, or task configs)")
     g2.add_argument("--skip-plugins", action="store_true",
                     help="do not load pii-extract plugins")
     g2.add_argument("--tasks", nargs="+", metavar="TASK_TYPE",

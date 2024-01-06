@@ -1,0 +1,9 @@
+{
+  "format": "piisa:config:pii-extract:plugins:v1",
+  "plugin-order": [
+    "piisa-detectors-regex",
+    "piisa-detectors-transformers",
+    "piisa-detectors-presidio"
+  ]
+}
+

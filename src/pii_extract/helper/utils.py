@@ -1,8 +1,14 @@
 """
-Utilities for managing field values
+Utilities for managing field values, and for setting the "process" field in
+a PiiEntity object
 """
 
 from typing import Dict, Union, Set, List, Iterable
+
+from pii_data.types import PiiEntity
+
+from .. import defs
+
 
 
 def union_sets(values: Iterable[Set[str]]) -> List[str]:
@@ -36,3 +42,17 @@ def taskd_field(taskd: Union[Dict, Iterable[Dict]],
     else:
         allsets = (taskd_field(s, field) for s in taskd)
         return set().union(*allsets)
+
+
+
+def set_pii_stage(pii: PiiEntity, allow_duplicates: bool = False, **data) -> bool:
+    """
+    Set the detection stage on a PiiEntity process field
+    """
+    if not allow_duplicates:
+        prc = pii.fields.get("process")
+        if prc and prc["stage"] == defs.STAGE:
+            return False
+
+    pii.add_process_stage(defs.STAGE, **data)
+    return True

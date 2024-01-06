@@ -6,7 +6,7 @@ from typing import Dict, Iterable, Union
 
 from pii_data.helper.logger import PiiLogger
 
-from ...defs import FMT_CONFIG_TASKS
+from ...defs import FMT_CONFIG_TASKS, FMT_CONFIG_TASKCFG
 from .sources import PluginTaskCollector, JsonTaskCollector
 from .task_collection import PiiTaskCollection
 
@@ -25,24 +25,26 @@ def get_task_collection(config: Dict = None, load_plugins: bool = True,
     global LOGGER
     if LOGGER is None:
         LOGGER = PiiLogger(__name__, debug)
-    LOGGER("get_task_collection")
+    LOGGER("TaskCol: get_task_collection")
 
-    piic = PiiTaskCollection(debug=debug)
+    task_cfg = config.get(FMT_CONFIG_TASKCFG) if config else None
+    piic = PiiTaskCollection(task_config=task_cfg, debug=debug)
     if languages:
         languages = [languages] if isinstance(languages, str) else list(languages)
 
     # Add task descriptors from installed plugins
     if load_plugins:
-        LOGGER("load plugin tasks")
+        LOGGER("TaskCol: load plugin tasks")
         c = PluginTaskCollector(config=config, languages=languages, debug=debug)
         piic.add_collector(c)
 
-    # Add task descriptors from JSON configs
-    task_cfg = config.get(FMT_CONFIG_TASKS) if config else None
-    if task_cfg:
-        LOGGER("load JSON tasks")
+    # Add the additional custom task descriptors defined in config
+    add_task_cfg = config.get(FMT_CONFIG_TASKS) if config else None
+    if add_task_cfg:
+        src = add_task_cfg.get("header", {}).get("source", "<CONFIG>")
+        LOGGER("TaskCol: load JSON tasks from: %s", src)
         c = JsonTaskCollector(languages=languages, debug=debug)
-        c.add_tasks(task_cfg)
+        c.add_tasks(add_task_cfg)
         piic.add_collector(c)
 
     return piic

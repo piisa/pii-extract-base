@@ -32,10 +32,11 @@ _REGEX_CC_FULL = None
 
 class CreditCardMock(BasePiiTask):
     """
-    A simple credit card number detection for most international credit cards
+    Unit test credit card number detection
     """
 
     pii_name = "standard credit card"
+    pii_method = "regex,checksum"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

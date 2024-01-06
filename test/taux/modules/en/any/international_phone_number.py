@@ -22,7 +22,7 @@ PII_TASKS = {
     "class": "regex",
     "task": PATTERN_INT_PHONE,
     "name": "international phone number",
-    "doc": "detect phone numbers that use international notation. Uses context",
+    "doc": "Unit test international phone number detector",
     "pii": {
         "type": PiiEnum.PHONE_NUMBER,
         "context": {

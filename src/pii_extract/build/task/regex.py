@@ -8,8 +8,9 @@ from typing import Iterable
 
 from pii_data.types import PiiEntity
 from pii_data.types.doc import DocumentChunk
+from pii_data.helper.exception import BuildException
 
-from .base import BasePiiTask, dbg_task, dbg_item
+from .base import BasePiiTask
 
 
 class RegexPiiTask(BasePiiTask):
@@ -26,7 +27,11 @@ class RegexPiiTask(BasePiiTask):
           :param pattern: a string containing a regex pattern
         """
         super().__init__(**kwargs)
-        self.regex = regex.compile(pattern, flags=regex.X | regex.VERSION0)
+        try:
+            self.regex = regex.compile(pattern, flags=regex.X | regex.VERSION0)
+        except Exception as e:
+            raise BuildException("cannot compile regex for PII {}: {}: {}",
+                                 self.task_info.name, e, pattern) from e
 
 
     def find(self, chunk: DocumentChunk) -> Iterable[PiiEntity]:
@@ -35,10 +40,10 @@ class RegexPiiTask(BasePiiTask):
         """
         defaults = self.get_pii_defaults()
         if self.debug:
-            dbg_task("Rgx", self.pii_info)
+            self.dbg_task("Rgx")
         for cc in self.regex.finditer(chunk.data):
             g = cc.lastindex or 0
             if self.debug:
-                dbg_item(cc.group(g))
+                self.dbg_item(cc.group(g))
             yield PiiEntity(self.pii_info, cc.group(g), chunk.id, cc.start(g),
                             **defaults)

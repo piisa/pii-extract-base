@@ -80,7 +80,7 @@ class FolderTaskCollector(BaseTaskCollector):
         if version:
             self._defaults['version'] = version
         self.basedir = Path(basedir)
-        self._log(".. Folder task collector (%s, version=%s): init",
+        self._log(".. Folder task collector (cls=%s, version=%s): init",
                   self.__class__.__name__, version)
 
         # PII filter

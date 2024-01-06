@@ -24,14 +24,17 @@ def print_tasks(langlist: List[str], proc: PiiProcessor, out: TextIO):
     tw = TextWrapper(initial_indent="     ", subsequent_indent="     ", width=78)
     print(f". Built tasks [language={','.join(langlist)}]", file=out)
     for (pii, subtype), tasklist in proc.task_info().items():
-        print(f"\n {pii.name}   {subtype if subtype else ''}", file=out)
-        for n, (lang, country, name, doc) in enumerate(tasklist):
+        print(f"\n {pii.name}{ ' > ' + subtype if subtype else ''}", file=out)
+        for n, (lang, country, name, doc, method) in enumerate(tasklist):
             if n:
                 print(file=out)
             print(f"   Language: {lang}", file=out)
             print(f"   Country: {country}", file=out)
             print(f"   Name: {name}", file=out)
+            if method:
+                print(f"   Method: {method}", file=out)
             if doc:
+                print("   Description:", file=out)
                 for ln in doc.splitlines():
                     print(tw.fill(ln), file=out)
 
@@ -47,18 +50,23 @@ def print_stats(stats: Dict[str, Dict], out: TextIO):
             print(f"   {k:20} :  {v:5}", file=sys.stderr)
 
 
-def piic_format(filename: str) -> str:
+def piic_format(filename: str, default: str = None) -> str:
     """
     Find out the desired file format for a PII Collection
+     :param filename: output filename, to analyze the file extension
+     :param default: a default format, if file extension inspection fails
     """
     ext = base_extension(filename)
     if ext == ".json":
         return "json"
     elif ext in (".ndjson", ".jsonl"):
         return "ndjson"
+    elif default:
+        return default
     else:
         raise InvArgException("cannot recognize piic output format for: {}",
                               filename)
+
 
 # ----------------------------------------------------------------------
 
@@ -80,7 +88,7 @@ def process_file(infile: str,
       :param infile: input source document
       :param outfile: output file where to store the detected PII entities
       :param configfile: JSON configuration file(s) to add (defining plugins
-         and/or tasks)
+         and/or tasks and/or task custom configs)
       :param skip_plugins: skip loading pii-extract task plugins
       :param lang: language the document is in (if not defined inside the doc)
       :param country: countries to build tasks for (if None, all applicable

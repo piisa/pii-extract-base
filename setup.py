@@ -75,7 +75,9 @@ setup_args = dict(
         ]
     },
     include_package_data=False,
-    package_data={},
+    package_data={
+        'pii_extract': ['resources/*.json'],
+    },
     # Post-install hooks
     cmdclass={},
     keywords=["PIISA, PII"],

@@ -1,0 +1,12 @@
+{
+  "format": "piisa:config:pii-extract:task-config:v1",
+  "task_config": [
+    {
+      "source": "piisa:pii-extract-base:test",
+      "name": "regex for PHONE_NUMBER:international phone number",
+      "config": {
+	"context": false
+      }
+    }
+  ]
+}

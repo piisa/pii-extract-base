@@ -14,17 +14,21 @@ CONFIGFILE = Path(__file__).parents[2] / "data" / "tasklist-example.json"
 
 INFO = """. Built tasks [language=en]
 
- CREDIT_CARD   
+ CREDIT_CARD
    Language: any
    Country: any
    Name: standard credit card
-     A simple credit card number detection for most international credit cards
+   Method: regex,checksum
+   Description:
+     Unit test credit card number detection
 
- PHONE_NUMBER   international phone number
+ PHONE_NUMBER > international phone number
    Language: en
    Country: any
    Name: regex for PHONE_NUMBER:international phone number
-     detect phone numbers that use international notation. Uses context
+   Method: regex,context
+   Description:
+     Unit test international phone number [regex-external]
 """
 
 # -------------------------------------------------------------------------

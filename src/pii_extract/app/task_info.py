@@ -7,11 +7,11 @@ import sys
 import argparse
 from textwrap import TextWrapper
 
-from typing import List, TextIO
+from typing import List, Dict, TextIO
 
 from pii_data.helper.config import load_config
 
-from .. import VERSION
+from .. import VERSION, defs
 from ..gather.collection.sources import PluginTaskCollector
 from ..api import PiiProcessor
 from ..api.file import print_tasks
@@ -46,11 +46,33 @@ def print_languages(args: argparse.Namespace, out: TextIO):
         print(f"  {lang}")
 
 
+def select_plugins_conf(args: argparse.Namespace) -> Dict:
+    """
+    Prepare a dynamic configuration to select which plugins to load
+    """
+    ptc = PluginTaskCollector(config=args.config, debug=args.debug)
+    all_plugins = [p['name'] for p in ptc.list_plugins()]
+    config = {
+        defs.FMT_CONFIG_PLUGIN: {
+            p: {"load": p in args.plugins} for p in all_plugins
+        }
+    }
+    return config
+
+
 def task_info(args: argparse.Namespace, out: TextIO):
     """
     Show info about tasks
     """
+    if args.plugins:
+        plugin_conf = select_plugins_conf(args)
+        if args.config:
+            args.config.append(plugin_conf)
+        else:
+            args.config = plugin_conf
+
     config = load_config(args.config) if args.config else None
+
     proc = PiiProcessor(config=config, skip_plugins=args.skip_plugins,
                         languages=args.lang, debug=args.debug)
 
@@ -58,7 +80,7 @@ def task_info(args: argparse.Namespace, out: TextIO):
         proc.build_tasks(lang, args.country, pii=args.tasks,
                          add_any=not args.strict)
 
-    print_tasks(args.lang, proc, out)
+    print_tasks(args.lang or [], proc, out)
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -100,6 +122,8 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     #g21 = g2.add_mutually_exclusive_group(required=True)
     s2.add_argument("--tasks", metavar="TASK_TYPE", nargs="+",
                     help="specific pii task types to include")
+    s2.add_argument("--plugins", metavar="PLUGIN_NAME", nargs="+",
+                    help="specific plugins to load")
 
     parsed = parser.parse_args(args)
     if not parsed.cmd:

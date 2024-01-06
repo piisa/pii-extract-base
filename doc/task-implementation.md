@@ -56,7 +56,7 @@ among them, and the package will label *all* ocurrences of the string as PII.
 If this is likely to happen, and there is code that *can* separate both uses,
 use the first return option (tuple), or the class implementation type below.
 
-Conversely, in case the same entity appears more than once in the passed
+Additionally, in case the same entity appears more than once in the passed
 document and the callable produces multiple reports for them, the second return
 form might produce PII duplicates.
 
@@ -71,17 +71,17 @@ In this case the task is implemented as a full Python class. The class *must*:
 
         def find(self, text: str) -> Iterable[PiiEntity]:
 
-   i.e. a method returting an iterable of identified [PiiEntity]
+   i.e. a method returning an iterable of identified [PiiEntity] objects
 
  * the default task name will be taken from the class-level attribute
-   `pii_name`, if it exists, or else as the class name.
+   `pii_name`, if it exists, or else from the class name.
 
 The class can also, optionally, include a constructor. In this case, the
 constructor must
  * accept an arbitrary number of keyword arguments
  * call the parent class constructor with those arguments
 
-In other words:
+In other words, a constructor must follow the following form:
 
 ```Python
 

@@ -6,17 +6,21 @@ Definition of the main PiiProcessor object: a class that
  * creating a PiiCollection with the results.
 """
 
-import logging
+from pathlib import Path
 from collections import defaultdict
 from itertools import chain
+import logging
 
 from typing import Tuple, List, Dict, Iterable, Union
 
 from pii_data.types import PiiEntityInfo, PiiEntity, PiiDetector, PiiCollection
 from pii_data.types.doc import SrcDocument, DocumentChunk
+from pii_data.helper.config import load_config, TYPE_CONFIG_LIST
 from pii_data.helper.exception import ProcException, InvArgException
 
+from .. import defs
 from ..helper.logger import PiiLogger
+from ..helper.utils import set_pii_stage
 from ..build.task import PiiTaskInfo
 from ..gather.collection import get_task_collection, TYPE_TASKENUM
 from ..gather.collection.sources import JsonTaskCollector
@@ -36,6 +40,25 @@ def check_language(lang1: TYPE_LANG, lang2: TYPE_LANG) -> bool:
     if isinstance(lang2, str):
         lang2 = [lang2]
     return bool(set(lang1) & set(lang2))
+
+
+def load_module_config(configlist: TYPE_CONFIG_LIST) -> Dict:
+    """
+    Load the configurations for this module
+    """
+    # Ensure configlist is a list
+    if not configlist:
+        configlist = []
+    elif isinstance(configlist, (str, Path, dict)):
+        configlist = [configlist]
+
+    # Load base config + passed config
+    base = Path(__file__).parents[1] / "resources" / "plugins.json"
+    fmts = defs.FMT_CONFIG_PLUGIN, defs.FMT_CONFIG_TASKS
+    return load_config([base] + configlist, fmts)
+
+
+# --------------------------------------------------------------------------
 
 
 
@@ -83,22 +106,25 @@ class PiiCollectionBuilder(PiiCollection):
 
 class PiiProcessor:
 
-    def __init__(self, config: Dict = None, skip_plugins: bool = False,
+    def __init__(self, config: TYPE_CONFIG_LIST = None,
+                 skip_plugins: bool = False,
                  languages: Iterable[str] = None, debug: bool = False):
         """
         Initialize a PII Processor object
-          :param config: configuration file, possibly containing a
+          :param config: a configuration, possibly containing a
             "pii-extract:tasks" section and/or a "pii-extract:plugins" section
-          :param skip_plugins: skip loaginf pii-extract plugins
+          :param skip_plugins: skip loading pii-extract plugins
           :param languages: define all languages that will be used
+          :param debug:
         """
         self._debug = debug
+        self._config = load_module_config(config)
         self._log = PiiLogger(__name__, debug)
         self._tasks = {}
         self._stats = {"num": defaultdict(int), "entities": defaultdict(int)}
         self._ptc = get_task_collection(load_plugins=not skip_plugins,
                                         languages=languages,
-                                        config=config, debug=debug)
+                                        config=self._config, debug=debug)
 
 
     def __repr__(self) -> str:
@@ -141,17 +167,19 @@ class PiiProcessor:
             country = [country]
         self._country = [c.lower() for c in country] if country else None
         # Build the list of tasks
-        tasks = self._ptc.build_tasks(lang, self._country,
-                                      pii=pii, add_any=add_any)
+        tasks = self._ptc.build_tasks(lang, self._country, pii=pii,
+                                      add_any=add_any)
         self._tasks[lang] = list(tasks)
         return len(self._tasks[lang])
 
 
-    def task_info(self, lang: str = None) -> Dict[Tuple, Tuple]:
+    def task_info(self, lang: str = None,
+                  asdict: bool = False) -> Dict[Tuple, Tuple]:
         """
         Return a dictionary with all the instantiated tasks:
           - keys are tuples (task id, subtype)
-          - values are lists of tuples (language, country, task name, task doc)
+          - values are dicts or lists of tuples
+             (language, country, task name, task doc, task method)
         """
         if not self._tasks:
             raise ProcException("no detector tasks have been built")
@@ -173,10 +201,14 @@ class PiiProcessor:
             if isinstance(pii_info_list, PiiEntityInfo):
                 pii_info_list = [pii_info_list]
             for info in pii_info_list:
-                out[(info.pii, info.subtype)].append(
-                    (info.lang, info.country,
-                     t.task_info.name, t.task_info.doc)
-                )
+                method = t.get_method(info)
+                value = (info.lang, info.country, t.task_info.name,
+                         t.task_info.doc, method)
+                if asdict:
+                    names = ("lang", "country", "name", "doc", "method")
+                    value = dict(zip(names, value))
+                out[(info.pii, info.subtype)].append(value)
+
         return out
 
 
@@ -189,7 +221,8 @@ class PiiProcessor:
           :param piic: collection to add the detected PII instances to
           :param default_lang: language to use, if the chunk does not define one
         """
-        self._log("... Detect chunk=%s", chunk.id, level=logging.DEBUG)
+        self._log("... Detect chunk=%s (size=%d)", chunk.id,
+                  len(chunk.data), level=logging.DEBUG)
         if not self._tasks:
             raise ProcException("no built detector tasks")
 
@@ -213,8 +246,7 @@ class PiiProcessor:
 
             # Execute the task, and process all detected entities
             for pii in task(chunk):
-                if "process" not in pii.fields:
-                    pii.fields["process"] = {"stage": "detection"}
+                set_pii_stage(pii)
                 piilist.append((pii, task.task_info, task.get_method(pii.info)))
                 self._stats["num"]["entities"] += 1
                 self._stats["entities"][pii.info.pii.name] += 1

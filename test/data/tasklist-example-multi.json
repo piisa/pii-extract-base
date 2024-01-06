@@ -9,16 +9,21 @@
     {
       "class": "PiiTask",
       "task": "taux.modules.any.credit_card_mock.CreditCardMock",
-      "pii": {
-	"type": "CREDIT_CARD",
-	"lang": "any",
-	"country": "any"
-      }
+      "pii": [
+	{
+	  "type": "CREDIT_CARD",
+	  "lang": "es"
+	},
+	{
+	  "type": "CREDIT_CARD",
+	  "lang": "en"
+	}
+      ]
     },
     {
       "class": "regex-external",
       "task": "taux.modules.en.any.international_phone_number.PATTERN_INT_PHONE",
-      "doc": "Unit test international phone number [regex-external]",
+      "doc": "detect phone numbers that use international notation. Uses context",
       "pii": {
 	"type": "PHONE_NUMBER",
 	"subtype": "international phone number",

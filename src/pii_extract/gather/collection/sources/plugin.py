@@ -2,7 +2,7 @@
 A task collector that searches for Python entry points that correspond to
 pii-extract plugins, providing lists of PiiTask descriptors
 
-A plugin must have 
+A plugin must have
   * an entry point of group PII_EXTRACT_PLUGIN_ID
   * the entry point must be a class with:
      - a constructor with a `config` argument, an optional "debug" keyword
@@ -13,6 +13,7 @@ A plugin must have
      - optional class attributes `source`, `version` and `description`
 """
 
+from sys import version_info
 from importlib.metadata import entry_points
 
 from typing import Dict, List, Iterable
@@ -43,13 +44,35 @@ class PluginTaskCollector(BaseTaskCollector):
         self._tasks = None
         self._plugins = []
 
-        # Configuration for plugins
+        # Fetch all available plugins
+        if version_info.minor < 10:
+            plugin_list = entry_points().get(PII_EXTRACT_PLUGIN_ID, [])
+        else:
+            plugin_list = entry_points().select(group=PII_EXTRACT_PLUGIN_ID)
+
+        # Get configuration for plugins
         plugin_cfg = config.get(FMT_CONFIG_PLUGIN, {}) if config else {}
 
-        for entry in entry_points().get(PII_EXTRACT_PLUGIN_ID, []):
+        # See if we have a defined load order
+        order = plugin_cfg.get("plugin-order")
+        if order:
+            def sortkey(v):
+                try:
+                    p = order.index(v.name)
+                    return f"{p:03d}"
+                except ValueError:
+                    return v.name
 
-            # See if we have specific options to instantiate this plugin
-            cfg = plugin_cfg.get(entry.name, {})
+            plugin_list = sorted(plugin_list, key=sortkey)
+
+        # Get custom cfg for plugins (for backwards compat, use also the base cfg)
+        custom_cfg = plugin_cfg.get("plugins") or plugin_cfg
+
+        # Instantiate all plugins
+        for entry in plugin_list:
+
+            # See if we have custom options to instantiate this plugin
+            cfg = custom_cfg.get(entry.name, {})
             if not cfg.get("load", True):
                 continue        # plugin is not to be activated
             options = cfg.get("options", {})
@@ -67,7 +90,7 @@ class PluginTaskCollector(BaseTaskCollector):
                 raise ProcException("cannot instantiate plugin '{}': {}",
                                     entry.name, e) from e
 
-            # Add to the list of loaded plugins
+            # Create the plugin descriptor
             desc = {
                 'name': entry.name,
                 'source': getattr(plugin, "source", entry.name),
@@ -75,6 +98,8 @@ class PluginTaskCollector(BaseTaskCollector):
                 'description': getattr(plugin, "description", None),
                 'object': plugin
             }
+
+            # Add to the list of loaded plugins
             self._plugins.append(desc)
             self._log(". loaded plugin: %s version=%s source=%s",
                       desc["name"], desc["version"], desc["source"])

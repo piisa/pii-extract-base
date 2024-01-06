@@ -1,7 +1,7 @@
 """
 Define the base classes for Pii Tasks
 """
-
+import sys
 from dataclasses import dataclass, fields
 
 from typing import Iterable, Dict, Any, List
@@ -16,22 +16,38 @@ from ...helper.normalizer import normalize
 from ...helper.context import context_spec, context_check
 
 
+def dbg_msg(msg: str, *args, out=None):
+    """
+    Print a generic debug message
+    """
+    if args:
+        msg = msg.format(*args)
+    print(msg, file=out or sys.stderr)
+
 
 def dbg_task(typ: str, *info: List[PiiEntityInfo], out=None):
     """
     Print out a brief task description
+
+    .. DEPRECATED::
+       use the class method
     """
-    print(f".. Task{typ if typ else ''}:", end=" ", file=out)
+    print(f".. Task {typ if typ else ''}:", end=" ", file=out or sys.stderr)
     for p in info:
-        print(f"{p.pii.name}/{p.lang}/{p.country}", end=" ", file=out)
-    print(file=out)
+        print(f"{p.pii.name}/{p.lang}/{p.country}", end=" ",
+              file=out or sys.stderr)
+    print(file=out or sys.stderr)
 
 
-def dbg_item(value: str, out=None):
+def dbg_item(self, value: str, out=None):
     """
     Print out a found result
+
+    .. DEPRECATED::
+       use the class method
     """
-    print(f"... found: [{value}]", file=out)
+    print(f"... found: [{value}]", file=out or sys.stderr)
+
 
 
 # --------------------------------------------------------------------------
@@ -62,13 +78,16 @@ class PiiTaskInfo:
 class BasePiiTask:
     """
     Base class for a Pii Detector Task
-.   """
+    """
 
-    def __init__(self, task: Dict, pii: Dict, debug: bool = False):
+    def __init__(self, task: Dict, pii: Dict, config: Dict = None,
+                 debug: bool = False):
         """
         Base constructor
           :param task: a task info dictionary
           :param pii: a PII descriptor dictionary
+          :param config: custom configuration for this task
+          :param debug: activate debug output
         """
         #print("INIT", task, pii)
 
@@ -77,26 +96,53 @@ class BasePiiTask:
         if task is None:
             task = {}
 
-        # Add context & method
-        self.method = pii.get("method") or task.get("method")
-        context = pii.get("context")
-        self.context = context_spec(context) if context else None
-
         # Fetch the options to be stored in the info subobject
         pii_info = {k: v for k, v in pii.items()
                     if k not in ("method", "extra", "context")}
 
         # Store options
-        self.pii_info = PiiEntityInfo(**pii_info)
-        self.task_info = PiiTaskInfo(**task)
+        self.config = config
         self.debug = debug
+        self.task_info = PiiTaskInfo(**task)
+        if not self.task_info.method:
+            self.task_info.method = pii.get("method")
+        self.pii_info = PiiEntityInfo(**pii_info)
+
+        # Add context & method, if defined and active
+        do_context = config.get("context", True) if config else True
+        context = pii.get("context")
+        self.context = context_spec(context) if do_context and context else None
+        if not self.context and self.task_info.method:
+            self.task_info.method = ','.join(v for v in self.task_info.method.split(',') if v != "context")
+
+
+    def dbg_task(self, typ: str, out=None):
+        """
+        Debug output: print out a brief task description
+        """
+        print(f".. Task {typ if typ else ''}:", end=" ", file=out or sys.stderr)
+        info = self.pii_info
+        if isinstance(info, PiiEntityInfo):
+            info = [info]
+        for p in info:
+            print(f"{p.pii.name}/{p.lang}/{p.country}", end=" ",
+                  file=out or sys.stderr)
+        print(file=out or sys.stderr)
+
+
+    def dbg_item(self, value: str, out=None):
+        """
+        Debug output: print out a match result
+        """
+        print(f"... found: [{value}]", file=out or sys.stderr)
 
 
     def get_method(self, pii: Any, **kwargs):
         """
         Return the 'method' metadata field
+          :param pii: dummy argument, for compatibility with BaseMultiPiiTask
         """
-        return self.method
+        return self.task_info.method
 
 
     def get_pii_defaults(self) -> Dict:

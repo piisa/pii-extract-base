@@ -14,7 +14,8 @@
       "2": {
 	"name": "standard credit card",
 	"source": "piisa:pii-extract-base:test",
-	"version": "0.0.1"
+	"version": "0.0.1",
+	"method": "regex,checksum"
       }
     }
   },

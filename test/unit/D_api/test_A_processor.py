@@ -18,18 +18,18 @@ import pii_extract.api.processor as mod
 from taux import auxpatch
 
 
-CONFIGFILE = Path(__file__).parents[2] / "data" / "tasklist-example.json"
-DOCUMENT = Path(__file__).parents[2] / "data" / "minidoc-example.yaml"
-
-
-@pytest.fixture
-def fixture_entry_points(monkeypatch):
-    auxpatch.patch_entry_points(monkeypatch)
+DATADIR = Path(__file__).parents[2] / "data"
+CONFIGFILE = DATADIR / "tasklist-example.json"
+DOCUMENT = DATADIR / "minidoc-example.yaml"
 
 
 @pytest.fixture
 def fixture_timestamp(monkeypatch):
     auxpatch.patch_timestamp(monkeypatch)
+
+@pytest.fixture
+def fixture_entry_points(monkeypatch):
+    auxpatch.patch_entry_points(monkeypatch)
 
 
 # -------------------------------------------------------------------------
@@ -76,10 +76,12 @@ def test120_constructor_plugin_json(fixture_entry_points):
     pd = mod.PiiProcessor(skip_plugins=True, config=config)
     assert str(pd) == '<PiiProcessor #2>'
 
-    # Specify plugin load
+    # Specify plugins to load
     config = load_config(CONFIGFILE)
     config[defs.FMT_CONFIG_PLUGIN] = {
-        "piisa-detectors-mock-plugin": {"load": False}
+        "plugins": {
+            "piisa-detectors-mock-plugin-1": {"load": False}
+        }
     }
     pd = mod.PiiProcessor(config=config)
     assert str(pd) == '<PiiProcessor #2>'
@@ -87,7 +89,9 @@ def test120_constructor_plugin_json(fixture_entry_points):
     # Specify plugins to load
     config = load_config(CONFIGFILE)
     config[defs.FMT_CONFIG_PLUGIN] = {
-        "piisa-detectors-mock-plugin": {"load": True}
+        "plugins": {
+            "piisa-detectors-mock-plugin-1": {"load": True}
+        }
     }
     pd = mod.PiiProcessor(config=config)
     assert str(pd) == '<PiiProcessor #5>'
@@ -226,11 +230,11 @@ def test210_tasks_info():
     exp = {
         (PiiEnum.CREDIT_CARD, None): [
             ('any', 'any', 'standard credit card',
-             'A simple credit card number detection for most international credit cards')
+             'Unit test credit card number detection', 'regex,checksum')
         ],
         (PiiEnum.PHONE_NUMBER, 'international phone number'): [
             ('en', 'any', 'regex for PHONE_NUMBER:international phone number',
-             'detect phone numbers that use international notation. Uses context')
+             'Unit test international phone number [regex-external]', 'regex,context')
         ]
     }
     #print(got)
@@ -285,7 +289,8 @@ def test230_tasks_detect_header(fixture_timestamp):
             2: {
                 "name": "standard credit card",
                 "source": "piisa:pii-extract-base:test",
-                "version": "0.0.1"
+                "version": "0.0.1",
+                "method": "regex,checksum"
             }
         }
     }
@@ -302,8 +307,8 @@ def test240_tasks_detect_pii(fixture_timestamp):
 
     doc = LocalSrcDocumentFile(DOCUMENT)
     r = pd.detect(doc)
-
     assert len(r) == 2
+
     pii = list(r)
     assert str(pii[0]) == "<PiiEntity PHONE_NUMBER:+34983453999>"
     assert str(pii[1]) == "<PiiEntity CREDIT_CARD:4273 9666 4581 5642>"
@@ -321,6 +326,7 @@ def test250_tasks_detect_pii_dict(fixture_timestamp):
     r = pd.detect(doc)
 
     pii = list(r)
+    assert len(pii) == 2
     exp = {
         'detector': 1,
         'type': 'PHONE_NUMBER',
@@ -353,6 +359,98 @@ def test250_tasks_detect_pii_dict(fixture_timestamp):
         'end': 44
     }
     assert exp == pii[1].asdict()
+
+
+def test250_tasks_detect_pii_config(fixture_timestamp):
+    """
+    Test PII detection, custom config
+    """
+    config = load_config([CONFIGFILE, DATADIR / "task-config.json"])
+    pd = mod.PiiProcessor(skip_plugins=True, config=config)
+    pd.build_tasks("en")
+
+    doc = LocalSrcDocumentFile(DOCUMENT)
+    r = pd.detect(doc)
+
+    # The header has change: method for phone number no longer uses context
+    exp = {
+        "date": "2045-01-30",
+        "format": "piisa:pii-collection:v1",
+        "lang": "en",
+        "stage": "detection",
+        "detectors": {
+            1: {
+                "name": "regex for PHONE_NUMBER:international phone number",
+                "source": "piisa:pii-extract-base:test",
+                "version": "0.0.1",
+                "method": "regex"  # no context
+            },
+            2: {
+                "name": "standard credit card",
+                "source": "piisa:pii-extract-base:test",
+                "version": "0.0.1",
+                "method": "regex,checksum"
+            }
+        }
+    }
+    assert exp == r.header()
+
+
+    pii = list(r)
+
+    # Now, since we have deactivated context for phone numbers, there's one more
+    assert len(pii) == 3
+
+    exp = {
+        'detector': 1,
+        'type': 'PHONE_NUMBER',
+        'subtype': 'international phone number',
+        'process': {
+            'stage': 'detection'
+        },
+        'value': '+34983453999',
+        'chunkid': '3',
+        'country': 'any',
+        'lang': 'en',
+        'docid': '00000-11111',
+        'start': 44,
+        'end': 56
+    }
+    assert exp == pii[0].asdict()
+
+    exp = {
+        'detector': 2,
+        'process': {
+            'stage': 'detection'
+        },
+        'type': 'CREDIT_CARD',
+        'value': '4273 9666 4581 5642',
+        'chunkid': '4',
+        'subtype': 'standard credit card',
+        'lang': 'en',
+        'docid': '00000-11111',
+        'start': 25,
+        'end': 44
+    }
+    assert exp == pii[1].asdict()
+
+    exp = {
+        'detector': 1,
+        'type': 'PHONE_NUMBER',
+        'subtype': 'international phone number',
+        'process': {
+            'stage': 'detection'
+        },
+        'value': '+34983453000',
+        'chunkid': '5',
+        'country': 'any',
+        'lang': 'en',
+        'docid': '00000-11111',
+        'start': 37,
+        'end': 49
+    }
+    assert exp == pii[2].asdict()
+
 
 
 def test300_tasks_detect_chunk(fixture_timestamp):

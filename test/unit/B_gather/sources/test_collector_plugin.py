@@ -7,6 +7,8 @@ import pytest
 from pii_data.types import PiiEnum
 from pii_extract.defs import LANG_ANY
 
+from pii_extract.defs import FMT_CONFIG_PLUGIN
+
 import pii_extract.gather.collection.sources.plugin as mod
 
 from taux import auxpatch
@@ -14,6 +16,10 @@ from taux import auxpatch
 @pytest.fixture
 def fixture_entry_points(monkeypatch):
     auxpatch.patch_entry_points(monkeypatch)
+
+@pytest.fixture
+def fixture_entry_points_3(monkeypatch):
+    auxpatch.patch_entry_points(monkeypatch, 3)
 
 
 # ---------------------------------------------------------------------
@@ -37,9 +43,71 @@ def test110_list(fixture_entry_points):
     assert isinstance(pl, list)
     assert len(pl) == 1
     assert isinstance(pl[0], dict)
-    assert pl[0]['name'] == 'piisa-detectors-mock-plugin'
+    assert pl[0]['name'] == 'piisa-detectors-mock-plugin-1'
     assert pl[0]['version'] == '0.999'
     assert isinstance(pl[0]['object'], auxpatch.PluginMock)
+
+
+def test111_list(fixture_entry_points_3):
+    """
+    Check listing plugins
+    """
+    tc = mod.PluginTaskCollector()
+    pl = tc.list_plugins()
+
+    assert isinstance(pl, list)
+    assert len(pl) == 3
+    assert isinstance(pl[0], dict)
+    assert pl[0]['name'] == 'piisa-detectors-mock-plugin-1'
+    assert pl[1]['name'] == 'piisa-detectors-mock-plugin-2'
+    assert pl[2]['name'] == 'piisa-detectors-mock-plugin-3'
+
+
+def test112_list_order(fixture_entry_points_3):
+    """
+    Check listing plugins, reorder
+    """
+    config = {
+        FMT_CONFIG_PLUGIN: {
+            "plugin-order": [
+                'piisa-detectors-mock-plugin-2'
+            ]
+        }
+    }
+    tc = mod.PluginTaskCollector(config=config)
+    pl = tc.list_plugins()
+
+    assert isinstance(pl, list)
+    assert len(pl) == 3
+    assert isinstance(pl[0], dict)
+    assert pl[0]['name'] == 'piisa-detectors-mock-plugin-2'
+    assert pl[1]['name'] == 'piisa-detectors-mock-plugin-1'
+    assert pl[2]['name'] == 'piisa-detectors-mock-plugin-3'
+
+
+def test113_list_load(fixture_entry_points_3):
+    """
+    Check listing plugins, deactivate
+    """
+    config = {
+        FMT_CONFIG_PLUGIN: {
+            "plugin-order": [
+                'piisa-detectors-mock-plugin-3'
+            ],
+            "plugins": {
+                "piisa-detectors-mock-plugin-2": {
+                    "load": False
+                }
+            }
+        }
+    }
+    tc = mod.PluginTaskCollector(config=config)
+    pl = tc.list_plugins()
+
+    assert isinstance(pl, list)
+    assert len(pl) == 2
+    assert pl[0]['name'] == 'piisa-detectors-mock-plugin-3'
+    assert pl[1]['name'] == 'piisa-detectors-mock-plugin-1'
 
 
 def test120_language_list(fixture_entry_points):
